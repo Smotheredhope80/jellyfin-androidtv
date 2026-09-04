@@ -13,6 +13,7 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.UserSettingPreferences
 import org.jellyfin.androidtv.preference.constant.BufferLength
+import org.jellyfin.androidtv.preference.constant.HdrOverrideMode
 import org.jellyfin.androidtv.ui.browsing.MainActivity
 import org.jellyfin.androidtv.ui.playback.MediaManager
 import org.jellyfin.androidtv.ui.playback.PlaybackLauncher
@@ -76,6 +77,9 @@ fun Scope.createPlaybackManager() = playbackManager(androidContext()) {
 		preferFfmpeg = userPreferences[UserPreferences.preferExoPlayerFfmpeg],
 		enableLibass = userPreferences[UserPreferences.assDirectPlay],
 		enableDebugLogging = userPreferences[UserPreferences.debuggingEnabled],
+		forceDolbyVisionProfile7Hevc =
+			Build.MANUFACTURER.equals("NVIDIA", ignoreCase = true) &&
+			userPreferences[UserPreferences.doviProfile7Override] == HdrOverrideMode.ENABLE,
 		baseDataSourceFactory = get<HttpDataSource.Factory>(),
 		minBufferDuration = bufferLength.minBufferDuration,
 		maxBufferDuration = bufferLength.maxBufferDuration,

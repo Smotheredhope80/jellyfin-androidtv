@@ -30,6 +30,7 @@ fun VideoPlayerOverlay(
 ) {
 	val visibilityState = rememberPlayerOverlayVisibility()
 	var showPlaybackInfo by remember { mutableStateOf(false) }
+	var showChapterBrowser by remember { mutableStateOf(false) }
 
 	val entry by rememberQueueEntry(playbackManager)
 	val item = entry?.run { baseItemFlow.collectAsState(baseItem) }?.value
@@ -37,6 +38,7 @@ fun VideoPlayerOverlay(
 	Box(modifier = modifier) {
 		PlayerOverlayLayout(
 			visibilityState = visibilityState,
+			controlsHeightFraction = if (showChapterBrowser) 0.52f else 1f / 3,
 			header = {
 				Column {
 					VideoPlayerHeader(
@@ -47,6 +49,9 @@ fun VideoPlayerOverlay(
 			controls = {
 				VideoPlayerControls(
 					playbackManager = playbackManager,
+					item = item,
+					chapterBrowserVisible = showChapterBrowser,
+					onChapterBrowserVisibleChange = { showChapterBrowser = it },
 					onPlaybackInfoClick = { showPlaybackInfo = !showPlaybackInfo },
 				)
 			},

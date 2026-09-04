@@ -39,6 +39,7 @@ import kotlin.time.Duration.Companion.seconds
 fun PlayerOverlayLayout(
 	modifier: Modifier = Modifier,
 	visibilityState: PlayerOverlayVisibilityState = rememberPlayerOverlayVisibility(),
+	controlsHeightFraction: Float = 1f / 3,
 	header: (@Composable () -> Unit)? = null,
 	controls: (@Composable () -> Unit)? = null,
 ) = Box(
@@ -72,7 +73,7 @@ fun PlayerOverlayLayout(
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
-					.fillMaxHeight(1f / 3)
+					.fillMaxHeight(controlsHeightFraction)
 					.background(
 						brush = Brush.verticalGradient(
 							colors = listOf(
@@ -100,7 +101,7 @@ fun PlayerOverlayLayout(
 				contentAlignment = Alignment.BottomCenter,
 				modifier = Modifier
 					.fillMaxWidth()
-					.fillMaxHeight(1f / 3)
+					.fillMaxHeight(controlsHeightFraction)
 					.background(
 						brush = Brush.verticalGradient(
 							colors = listOf(

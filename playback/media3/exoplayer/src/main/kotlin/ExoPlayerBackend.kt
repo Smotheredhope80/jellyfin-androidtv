@@ -2,15 +2,21 @@ package org.jellyfin.playback.media3.exoplayer
 
 import android.app.ActivityManager
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.util.TypedValue
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.core.content.getSystemService
+import androidx.core.graphics.TypefaceCompat
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
@@ -24,12 +30,15 @@ import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.ts.TsExtractor
 import androidx.media3.ui.SubtitleView
+import androidx.media3.ui.CaptionStyleCompat
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.factory.AssRenderersFactory
 import io.github.peerless2012.ass.media.kt.withAssMkvSupport
 import io.github.peerless2012.ass.media.parser.AssSubtitleParserFactory
 import io.github.peerless2012.ass.media.type.AssRenderType
 import io.github.peerless2012.ass.media.widget.AssSubtitleView
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.jellyfin.playback.core.backend.BasePlayerBackend
 import org.jellyfin.playback.core.mediastream.MediaStream
 import org.jellyfin.playback.core.mediastream.PlayableMediaStream
@@ -47,6 +56,7 @@ import org.jellyfin.playback.core.ui.PlayerSurfaceView
 import org.jellyfin.playback.media3.exoplayer.support.getPlaySupportReport
 import org.jellyfin.playback.media3.exoplayer.support.toFormats
 import timber.log.Timber
+import java.util.Locale
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -63,10 +73,15 @@ class ExoPlayerBackend(
 
 	private var currentStream: PlayableMediaStream? = null
 	private var subtitleView: SubtitleView? = null
+	private var subtitleStyle: SubtitleStyle? = null
 	private val audioPipeline = ExoPlayerAudioPipeline()
 	private val audioAttributeState = AudioAttributeState()
 	private val timedEventState = TimedEventState()
 	private var lastKnownDuration: Duration? = null
+	private val _audioTracks = MutableStateFlow<List<PlayerTrackOption>>(emptyList())
+	private val _subtitleTracks = MutableStateFlow<List<PlayerTrackOption>>(emptyList())
+	val audioTracks = _audioTracks.asStateFlow()
+	val subtitleTracks = _subtitleTracks.asStateFlow()
 
 	private val assHandler by lazy {
 		AssHandler(AssRenderType.OVERLAY_OPEN_GL)
@@ -89,13 +104,18 @@ class ExoPlayerBackend(
 			setConstantBitrateSeekingAlwaysEnabled(true)
 		}
 
+		val configuredExtractorsFactory = when {
+			exoPlayerOptions.forceDolbyVisionProfile7Hevc -> DolbyVisionProfile7HevcExtractorsFactory(extractorsFactory)
+			else -> extractorsFactory
+		}
+
 		val mediaSourceFactory = if (exoPlayerOptions.enableLibass) {
 			val assSubtitleParserFactory = AssSubtitleParserFactory(assHandler)
-			val assExtractorsFactory = extractorsFactory.withAssMkvSupport(assSubtitleParserFactory, assHandler)
+			val assExtractorsFactory = configuredExtractorsFactory.withAssMkvSupport(assSubtitleParserFactory, assHandler)
 			DefaultMediaSourceFactory(dataSourceFactory, assExtractorsFactory).apply {
 				setSubtitleParserFactory(assSubtitleParserFactory)
 			}
-		} else DefaultMediaSourceFactory(dataSourceFactory, extractorsFactory)
+		} else DefaultMediaSourceFactory(dataSourceFactory, configuredExtractorsFactory)
 
 		val renderersFactory = DefaultRenderersFactory(context).apply {
 			setEnableDecoderFallback(true)
@@ -124,6 +144,12 @@ class ExoPlayerBackend(
 			.setRenderersFactory(renderersFactory)
 			.setTrackSelector(DefaultTrackSelector(context).apply {
 				setParameters(buildUponParameters().apply {
+					if (exoPlayerOptions.forceDolbyVisionProfile7Hevc) {
+						// Some DV7 remuxes have an incorrectly flagged non-English default track.
+						// Prefer English before preparation so playback cannot stall before the
+						// user has a chance to open the audio selector.
+						setPreferredAudioLanguage("eng")
+					}
 					setAudioOffloadPreferences(
 						TrackSelectionParameters.AudioOffloadPreferences.DEFAULT.buildUpon().apply {
 							setAudioOffloadMode(TrackSelectionParameters.AudioOffloadPreferences.AUDIO_OFFLOAD_MODE_ENABLED)
@@ -186,6 +212,11 @@ class ExoPlayerBackend(
 			audioPipeline.setAudioSessionId(audioSessionId)
 		}
 
+		override fun onTracksChanged(tracks: Tracks) {
+			_audioTracks.value = tracks.optionsForType(C.TRACK_TYPE_AUDIO)
+			_subtitleTracks.value = tracks.optionsForType(C.TRACK_TYPE_TEXT)
+		}
+
 		override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
 			val queueEntry = mediaItem?.localConfiguration?.tag as? QueueEntry
 			audioPipeline.normalizationGain = queueEntry?.normalizationGain
@@ -215,6 +246,7 @@ class ExoPlayerBackend(
 		if (surfaceView != null) {
 			if (subtitleView == null) {
 				subtitleView = SubtitleView(surfaceView.context).apply {
+					subtitleStyle?.let { style -> applySubtitleStyle(style) }
 					if (exoPlayerOptions.enableLibass) {
 						addView(AssSubtitleView(surfaceView.context, assHandler))
 					}
@@ -227,6 +259,50 @@ class ExoPlayerBackend(
 			subtitleView = null
 		}
 	}
+
+	fun setSubtitleStyle(
+		textColor: Int,
+		backgroundColor: Int,
+		strokeColor: Int,
+		textWeight: Int,
+		textSize: Float,
+		bottomPaddingFraction: Float,
+	) {
+		val style = SubtitleStyle(
+			textColor = textColor,
+			backgroundColor = backgroundColor,
+			strokeColor = strokeColor,
+			textWeight = textWeight,
+			textSize = textSize,
+			bottomPaddingFraction = bottomPaddingFraction,
+		)
+		subtitleStyle = style
+		subtitleView?.applySubtitleStyle(style)
+	}
+
+	private fun SubtitleView.applySubtitleStyle(style: SubtitleStyle) {
+		setFixedTextSize(TypedValue.COMPLEX_UNIT_DIP, style.textSize)
+		setBottomPaddingFraction(style.bottomPaddingFraction)
+		setStyle(
+			CaptionStyleCompat(
+				style.textColor,
+				style.backgroundColor,
+				Color.TRANSPARENT,
+				if (Color.alpha(style.strokeColor) == 0) CaptionStyleCompat.EDGE_TYPE_NONE else CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+				style.strokeColor,
+				TypefaceCompat.create(context, Typeface.DEFAULT, style.textWeight, false),
+			)
+		)
+	}
+
+	private data class SubtitleStyle(
+		val textColor: Int,
+		val backgroundColor: Int,
+		val strokeColor: Int,
+		val textWeight: Int,
+		val textSize: Float,
+		val bottomPaddingFraction: Float,
+	)
 
 	override fun prepareItem(item: QueueEntry) {
 		val stream = requireNotNull(item.mediaStream)
@@ -325,6 +401,100 @@ class ExoPlayerBackend(
 		}
 
 		exoPlayer.setPlaybackSpeed(speed)
+	}
+
+	fun selectAudioTrack(groupIndex: Int, trackIndex: Int) {
+		selectTrack(C.TRACK_TYPE_AUDIO, groupIndex, trackIndex)
+	}
+
+	fun selectSubtitleTrack(groupIndex: Int, trackIndex: Int) {
+		selectTrack(C.TRACK_TYPE_TEXT, groupIndex, trackIndex)
+	}
+
+	fun disableSubtitles() {
+		exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+			.buildUpon()
+			.clearOverridesOfType(C.TRACK_TYPE_TEXT)
+			.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+			.build()
+	}
+
+	private fun selectTrack(type: Int, groupIndex: Int, trackIndex: Int) {
+		val group = exoPlayer.currentTracks.groups.getOrNull(groupIndex) ?: return
+		if (group.type != type || trackIndex !in 0 until group.length || !group.isTrackSupported(trackIndex)) return
+
+		exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+			.buildUpon()
+			.setTrackTypeDisabled(type, false)
+			.setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
+			.build()
+	}
+
+	private fun Tracks.optionsForType(type: Int): List<PlayerTrackOption> = groups.flatMapIndexed { groupIndex, group ->
+		if (group.type != type) return@flatMapIndexed emptyList()
+
+		(0 until group.length).mapNotNull { trackIndex ->
+			if (!group.isTrackSupported(trackIndex)) return@mapNotNull null
+			val format = group.getTrackFormat(trackIndex)
+			val language = format.language
+				?.takeUnless { it == "und" }
+				?.let { code -> Locale.forLanguageTag(code.replace('_', '-')).displayLanguage }
+				?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+			val rawCodec = format.codecs?.takeIf(String::isNotBlank)
+				?: format.sampleMimeType?.substringAfter('/')
+			val sourceLabel = format.label
+				?.takeIf(String::isNotBlank)
+				?.takeUnless { label ->
+					label.equals(rawCodec, ignoreCase = true) ||
+						label.startsWith("vnd.", ignoreCase = true) ||
+						label.startsWith("audio/", ignoreCase = true)
+				}
+			val details = listOfNotNull(
+				sourceLabel,
+				language?.takeIf(String::isNotBlank),
+				rawCodec?.friendlyCodecName(),
+				format.channelCount.takeIf { type == C.TRACK_TYPE_AUDIO && it > 0 }?.friendlyChannelName(),
+			).distinctBy { it.lowercase(Locale.getDefault()) }
+
+			PlayerTrackOption(
+				groupIndex = groupIndex,
+				trackIndex = trackIndex,
+				label = details.joinToString(" • ").ifBlank { "Track ${trackIndex + 1}" },
+				selected = group.isTrackSelected(trackIndex),
+			)
+		}
+	}
+
+	private fun String.friendlyCodecName(): String {
+		val codec = lowercase(Locale.ROOT)
+		return when {
+			codec.contains("dtsx") || codec.contains("dts-x") -> "DTS:X"
+			codec.contains("dts.hd") || codec.contains("dts-hd") || codec.contains("dtshd") -> "DTS-HD"
+			codec.contains("dts") -> "DTS"
+			codec.contains("truehd") || codec.contains("mlp") -> "Dolby TrueHD"
+			codec.contains("eac3") || codec.contains("e-ac-3") || codec.contains("ec-3") -> "Dolby Digital Plus"
+			codec.contains("ac3") || codec.contains("ac-3") -> "Dolby Digital"
+			codec.contains("ac4") || codec.contains("ac-4") -> "Dolby AC-4"
+			codec.contains("mp4a") || codec.contains("aac") -> "AAC"
+			codec.contains("opus") -> "Opus"
+			codec.contains("vorbis") -> "Vorbis"
+			codec.contains("flac") -> "FLAC"
+			codec.contains("alac") -> "ALAC"
+			codec.contains("mpeg") || codec.contains("mp3") -> "MP3"
+			codec.contains("subrip") || codec.contains("srt") -> "SRT"
+			codec.contains("ass") || codec.contains("ssa") -> "ASS"
+			codec.contains("webvtt") || codec.contains("vtt") -> "WebVTT"
+			codec.contains("pgs") -> "PGS"
+			else -> this
+		}
+	}
+
+	private fun Int.friendlyChannelName(): String = when (this) {
+		1 -> "Mono"
+		2 -> "Stereo"
+		6 -> "5.1"
+		8 -> "7.1"
+		else -> "$this ch"
 	}
 
 	override fun getPositionInfo(): PositionInfo = PositionInfo(

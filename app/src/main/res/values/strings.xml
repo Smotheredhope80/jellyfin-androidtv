@@ -54,6 +54,7 @@
     <string name="lbl_cast_crew">Cast &amp; crew</string>
     <string name="lbl_additional_parts">Additional parts</string>
     <string name="lbl_chapters">Chapters</string>
+    <string name="lbl_chapter_number">Chapter %1$d</string>
     <string name="lbl_specials">Specials</string>
     <string name="lbl_trailers">Trailers</string>
     <string name="lbl_items">Items</string>
@@ -319,6 +320,7 @@
     <string name="just_one">Just this one</string>
     <string name="lbl_sign_in">Please sign in</string>
     <string name="lbl_playback_control_ends">Ends at %1$s</string>
+    <string name="lbl_playback_control_remaining">%1$s remaining</string>
     <string name="watch_count_overflow">99+</string>
     <string name="pref_clock_display">Show clock</string>
     <string name="lbl_always">Always</string>
