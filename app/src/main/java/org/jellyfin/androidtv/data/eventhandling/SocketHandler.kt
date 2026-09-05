@@ -8,6 +8,7 @@ import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -58,12 +59,32 @@ class SocketHandler(
 	init {
 		lifecycle.coroutineScope.launch(Dispatchers.IO) {
 			lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+				// The server can lose this session capability while the process remains
+				// alive (for example after a network or server interruption). Register
+				// again whenever the app returns to the foreground instead of relying
+				// solely on the initial user-session startup path.
+				launch { updateSessionWithRetry() }
 				subscribe(this)
 			}
 		}
 	}
 
-	suspend fun updateSession() {
+	suspend fun updateSessionWithRetry() {
+		repeat(CAPABILITY_REGISTRATION_ATTEMPTS) { attempt ->
+			if (updateSession()) return
+
+			if (attempt < CAPABILITY_REGISTRATION_ATTEMPTS - 1) {
+				delay(CAPABILITY_REGISTRATION_RETRY_DELAY_MS * (attempt + 1))
+			}
+		}
+
+		Timber.e(
+			"Unable to register remote-control capabilities after " +
+				"$CAPABILITY_REGISTRATION_ATTEMPTS attempts"
+		)
+	}
+
+	private suspend fun updateSession(): Boolean {
 		try {
 			withContext(Dispatchers.IO) {
 				api.sessionApi.postCapabilities(
@@ -90,8 +111,11 @@ class SocketHandler(
 					},
 				)
 			}
+			Timber.i("Remote-control capabilities registered")
+			return true
 		} catch (err: ApiClientException) {
-			Timber.e(err, "Unable to update capabilities")
+			Timber.w(err, "Unable to register remote-control capabilities")
+			return false
 		}
 	}
 
@@ -250,5 +274,7 @@ class SocketHandler(
 
 	companion object {
 		const val TICKS_TO_MS = 10000L
+		private const val CAPABILITY_REGISTRATION_ATTEMPTS = 4
+		private const val CAPABILITY_REGISTRATION_RETRY_DELAY_MS = 1_000L
 	}
 }

@@ -53,7 +53,7 @@ class JellyfinApplication : Application() {
 		}
 
 		// Update WebSockets
-		launch { socketListener.updateSession() }
+		launch { socketListener.updateSessionWithRetry() }
 	}
 
 	override fun attachBaseContext(base: Context?) {
