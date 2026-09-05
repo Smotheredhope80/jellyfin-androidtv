@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="theme_elegantfin_accent">#775BF4</color>
+    <color name="theme_elegantfin_accent_secondary">#756FE2</color>
+    <color name="theme_elegantfin_background_dark">#111827</color>
+    <color name="theme_elegantfin_background_light">#1D2635</color>
+    <color name="theme_elegantfin_surface">#1F2937</color>
+    <color name="theme_elegantfin_border">#47505C</color>
+    <color name="theme_elegantfin_text_dim">#9CA3AF</color>
+
+    <style name="Theme.Jellyfin.ElegantFin" parent="Theme.Jellyfin">
+        <item name="android:colorPrimary">@color/theme_elegantfin_background_light</item>
+        <item name="android:colorPrimaryDark">@color/theme_elegantfin_background_dark</item>
+        <item name="android:colorAccent">@color/theme_elegantfin_accent</item>
+        <item name="android:windowBackground">@drawable/elegantfin_background</item>
+        <item name="defaultBackground">@drawable/elegantfin_background</item>
+        <item name="cardImageBackground">@color/theme_elegantfin_surface</item>
+        <item name="defaultSearchColor">@color/theme_elegantfin_accent</item>
+        <item name="progressPrimary">@color/theme_elegantfin_accent</item>
+        <item name="progressSecondary">@color/theme_elegantfin_accent_secondary</item>
+        <item name="android:colorButtonNormal">@color/theme_elegantfin_surface</item>
+        <item name="buttonDefaultNormalBackground">@color/theme_elegantfin_surface</item>
+        <item name="buttonDefaultHighlightBackground">@color/theme_elegantfin_accent</item>
+        <item name="inputDefaultStrokeColor">@color/theme_elegantfin_border</item>
+        <item name="inputDefaultHighlightBackground">@color/theme_elegantfin_accent</item>
+        <item name="popupMenuBackground">@color/theme_elegantfin_background_light</item>
+        <item name="controlIconBackground">@color/theme_elegantfin_surface</item>
+        <item name="controlIconForegroundActive">@color/theme_elegantfin_accent</item>
+        <item name="controlIconForegroundInactive">@color/theme_elegantfin_text_dim</item>
+        <item name="qrForeground">@color/theme_elegantfin_accent</item>
+
+        <item name="cardRounding">12dp</item>
+        <item name="buttonRounding">12dp</item>
+        <item name="inputRounding">10dp</item>
+        <item name="popupMenuRounding">12dp</item>
+
+        <item name="tile_port_person_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_port_video_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_land_folder_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_chapter_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_land_tv_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_port_tv_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_actors_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_land_photo_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_port_folder_bg">@color/theme_elegantfin_surface</item>
+        <item name="tile_land_series_timer_bg">@color/theme_elegantfin_surface</item>
+    </style>
+</resources>

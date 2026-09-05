@@ -140,6 +140,12 @@
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustNothing" />
 
+        <activity
+            android:name=".ui.playback.EmbeddedTrailerActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
         <activity android:name=".ui.playback.ExternalPlayerActivity" />
     </application>
 </manifest>
