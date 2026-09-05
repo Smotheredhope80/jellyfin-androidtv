@@ -1,6 +1,5 @@
 package org.jellyfin.androidtv.ui.background
 
-import android.graphics.drawable.ColorDrawable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -39,8 +38,10 @@ private fun AppThemeBackground() {
 		val drawable = attributes.getDrawable(0)
 		attributes.recycle()
 
-		if (drawable is ColorDrawable) drawable.toBitmap(1, 1).asImageBitmap()
-		else drawable?.toBitmap()?.asImageBitmap()
+		drawable?.toBitmap(
+			width = drawable.intrinsicWidth.coerceAtLeast(1),
+			height = drawable.intrinsicHeight.coerceAtLeast(1),
+		)?.asImageBitmap()
 	}
 
 	if (themeBackground != null) {
