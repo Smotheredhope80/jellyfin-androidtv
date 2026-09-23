@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pref_tv_theme_music">TV theme music</string>
+    <string name="pref_tv_theme_music_description">Play available theme songs quietly on series and season pages.</string>
+</resources>

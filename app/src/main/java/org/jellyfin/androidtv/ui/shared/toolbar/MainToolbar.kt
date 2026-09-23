@@ -56,6 +56,8 @@ enum class MainToolbarActiveButton {
 @Composable
 fun MainToolbar(
 	activeButton: MainToolbarActiveButton = MainToolbarActiveButton.None,
+	onSearchClick: (() -> Unit)? = null,
+	searchFocusRequester: FocusRequester? = null,
 ) {
 	val userRepository = koinInject<UserRepository>()
 	val api = koinInject<ApiClient>()
@@ -67,6 +69,8 @@ fun MainToolbar(
 	MainToolbar(
 		userImage = userImage,
 		activeButton = activeButton,
+		onSearchClick = onSearchClick,
+		searchFocusRequester = searchFocusRequester,
 	)
 }
 
@@ -74,6 +78,8 @@ fun MainToolbar(
 private fun MainToolbar(
 	userImage: String? = null,
 	activeButton: MainToolbarActiveButton,
+	onSearchClick: (() -> Unit)?,
+	searchFocusRequester: FocusRequester?,
 ) {
 	val focusRequester = remember { FocusRequester() }
 	val navigationRepository = koinInject<NavigationRepository>()
@@ -146,8 +152,9 @@ private fun MainToolbar(
 						onClick = {
 							if (activeButton != MainToolbarActiveButton.Search) {
 								navigationRepository.navigate(Destinations.search())
-							}
+							} else onSearchClick?.invoke()
 						},
+						modifier = if (searchFocusRequester != null) Modifier.focusRequester(searchFocusRequester) else Modifier,
 						colors = if (activeButton == MainToolbarActiveButton.Search) activeButtonColors else ButtonDefaults.colors(),
 						content = { Text(stringResource(R.string.lbl_search)) }
 					)

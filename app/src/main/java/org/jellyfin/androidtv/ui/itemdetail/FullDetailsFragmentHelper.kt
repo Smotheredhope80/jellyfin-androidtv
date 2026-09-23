@@ -155,6 +155,7 @@ fun FullDetailsFragment.togglePlayed() {
 }
 
 fun FullDetailsFragment.playTrailers() {
+	stopThemeMusic()
 	val localTrailerCount = mBaseItem.localTrailerCount ?: 0
 
 	// External trailer

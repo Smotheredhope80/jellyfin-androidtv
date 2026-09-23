@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -40,11 +41,11 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 		}
 
 		val videoId = intent.getStringExtra(EXTRA_VIDEO_ID)
-		externalUrl = intent.getStringExtra(EXTRA_EXTERNAL_URL).orEmpty()
 		if (videoId == null || !YOUTUBE_ID_PATTERN.matches(videoId)) {
 			finish()
 			return
 		}
+		externalUrl = "https://www.youtube.com/watch?v=$videoId"
 
 		try {
 			webView = WebView(this).apply {
@@ -54,13 +55,13 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 				webChromeClient = WebChromeClient()
 				webViewClient = object : WebViewClient() {
 					override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-						if (request.isForMainFrame) {
-							startActivity(Intent(Intent.ACTION_VIEW, request.url))
-							finish()
-							return true
+						if (!request.isForMainFrame) return false
+
+						if (request.url.toString() == externalUrl) {
+							openExternalTrailer()
 						}
 
-						return false
+						return true
 					}
 				}
 				settings.javaScriptEnabled = true
@@ -84,37 +85,48 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 		}
 	}
 
-	override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-		if (!::webView.isInitialized) return super.onKeyDown(keyCode, event)
-
-		val command = when (keyCode) {
-			KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-			KeyEvent.KEYCODE_MEDIA_PLAY,
-			KeyEvent.KEYCODE_MEDIA_PAUSE -> "togglePlayback()"
-			KeyEvent.KEYCODE_MEDIA_REWIND -> "seekBy(-10)"
-			KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> "seekBy(10)"
-			else -> null
+	override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+		if (!::webView.isInitialized) {
+			return super.dispatchKeyEvent(event)
 		}
 
-		if (command != null) {
+		val command = trailerPlaybackCommand(event.keyCode)
+			?: return super.dispatchKeyEvent(event)
+
+		if (
+			event.action == KeyEvent.ACTION_DOWN &&
+			event.repeatCount == 0
+		) {
 			webView.evaluateJavascript(command, null)
-			return true
 		}
 
-		return super.onKeyDown(keyCode, event)
+		return true
+	}
+
+	override fun onResume() {
+		super.onResume()
+
+		if (::webView.isInitialized) {
+			webView.onResume()
+		}
 	}
 
 	override fun onPause() {
-		if (::webView.isInitialized) webView.evaluateJavascript("pausePlayback()", null)
+		if (::webView.isInitialized) {
+			webView.evaluateJavascript("pausePlayback()", null)
+			webView.onPause()
+		}
+
 		super.onPause()
 	}
 
 	override fun onDestroy() {
 		if (::webView.isInitialized) {
+			(webView.parent as? ViewGroup)?.removeView(webView)
 			webView.stopLoading()
-			webView.loadUrl("about:blank")
 			webView.destroy()
 		}
+
 		super.onDestroy()
 	}
 
@@ -157,9 +169,29 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 					if (player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo();
 					else player.playVideo();
 				}
-				function pausePlayback() { if (player && player.pauseVideo) player.pauseVideo(); }
+				function playPlayback() {
+					if (player && player.playVideo) {
+						player.playVideo();
+					}
+				}
+				function pausePlayback() {
+					if (player && player.pauseVideo) {
+						player.pauseVideo();
+					}
+				}
 				function seekBy(seconds) {
-					if (player && player.getCurrentTime && player.seekTo) player.seekTo(player.getCurrentTime() + seconds, true);
+					if (!player || !player.getCurrentTime || !player.seekTo) {
+						return;
+					}
+
+					const requested = player.getCurrentTime() + seconds;
+					const duration = player.getDuration ? player.getDuration() : 0;
+
+					const target = duration > 0
+						? Math.min(duration, Math.max(0, requested))
+						: Math.max(0, requested);
+
+					player.seekTo(target, true);
 				}
 			</script>
 		</body>
@@ -179,3 +211,13 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 			}
 	}
 }
+
+internal fun trailerPlaybackCommand(keyCode: Int): String? =
+	when (keyCode) {
+		KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> "togglePlayback()"
+		KeyEvent.KEYCODE_MEDIA_PLAY -> "playPlayback()"
+		KeyEvent.KEYCODE_MEDIA_PAUSE -> "pausePlayback()"
+		KeyEvent.KEYCODE_MEDIA_REWIND -> "seekBy(-10)"
+		KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> "seekBy(10)"
+		else -> null
+	}

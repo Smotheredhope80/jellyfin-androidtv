@@ -7,6 +7,7 @@ import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.widget.FrameLayout
 import org.jellyfin.androidtv.databinding.ViewRowDetailsBinding
+import org.jellyfin.androidtv.ui.itemdetail.ModernDetailsStyle
 
 class DetailRowView @JvmOverloads constructor(
 	context: Context,
@@ -14,24 +15,36 @@ class DetailRowView @JvmOverloads constructor(
 	defStyleAttr: Int = 0,
 	defStyleRes: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr, defStyleRes) {
-	val binding = ViewRowDetailsBinding.inflate(LayoutInflater.from(context), this, true)
+	var binding = ViewRowDetailsBinding.inflate(LayoutInflater.from(context), this, true)
+		private set
+	private var modernLayout = false
+	private var lastFocusedButton: View? = null
+
+	fun setModernLayout(enabled: Boolean) {
+		if (modernLayout == enabled) return
+		modernLayout = enabled
+		lastFocusedButton = null
+		removeAllViews()
+		binding = ViewRowDetailsBinding.inflate(LayoutInflater.from(context), this, true)
+		binding.fdButtonRow.setOnHierarchyChangeListener(buttonsHierarchyChangeListener)
+		binding.mainImage.clipToOutline = true
+		if (enabled) ModernDetailsStyle.applyLayout(binding)
+	}
 
 	/**
 	 * Keeps track of the last selected button and reselect it when navigating back to the buttons row.
 	 */
 	private val buttonsHierarchyChangeListener = object : OnHierarchyChangeListener {
 
-		private var lastFocusedButton: View? = null
-
 		private val focusChangeListener = OnFocusChangeListener { view, hasFocus ->
 			// Restore last focused button when navigating back to button row
 			if (hasFocus && lastFocusedButton != null) {
-				lastFocusedButton?.requestFocus()
+				lastFocusedButton?.takeIf { it.parent === binding.fdButtonRow && it.visibility == View.VISIBLE }?.requestFocus()
 				lastFocusedButton = null
 			}
 			view.post {
 				// Store last focused button when navigating away from button row
-				if (binding.fdButtonRow.focusedChild == null) {
+				if (view.parent === binding.fdButtonRow && binding.fdButtonRow.focusedChild == null) {
 					lastFocusedButton = view
 				}
 			}
@@ -43,6 +56,7 @@ class DetailRowView @JvmOverloads constructor(
 
 		override fun onChildViewRemoved(parent: View?, child: View?) {
 			child?.onFocusChangeListener = null
+			if (lastFocusedButton === child) lastFocusedButton = null
 		}
 	}
 

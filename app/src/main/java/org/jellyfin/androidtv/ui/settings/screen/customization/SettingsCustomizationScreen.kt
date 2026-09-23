@@ -85,6 +85,16 @@ fun SettingsCustomizationScreen() {
 		item { ListSection(headingContent = { Text(stringResource(R.string.pref_browsing)) }) }
 
 		item {
+			var themeMusic by rememberPreference(userPreferences, UserPreferences.tvThemeMusic)
+			ListButton(
+				headingContent = { Text(stringResource(R.string.pref_tv_theme_music)) },
+				captionContent = { Text(stringResource(R.string.pref_tv_theme_music_description)) },
+				trailingContent = { Checkbox(checked = themeMusic) },
+				onClick = { themeMusic = !themeMusic },
+			)
+		}
+
+		item {
 			ListButton(
 				leadingContent = { Icon(painterResource(R.drawable.ic_grid), contentDescription = null) },
 				headingContent = { Text(stringResource(R.string.pref_libraries)) },

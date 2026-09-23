@@ -70,6 +70,7 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
     protected TextView mTitle;
     private LinearLayout mInfoRow;
     private TextView mSummary;
+    private ModernLibraryBrowser modernBrowser;
 
     protected static final int BY_LETTER = 0;
     protected static final int GENRES = 1;
@@ -122,6 +123,7 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
         mTitle = binding.title;
         mInfoRow = binding.infoRow;
         mSummary = binding.summary;
+        modernBrowser = ModernLibraryBrowser.install(binding, mFolder);
 
         // Inject the RowsSupportFragment in the results container
         if (getChildFragmentManager().findFragmentById(R.id.rowsFragment) == null) {
@@ -148,6 +150,7 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
 
     @Override
     public void onDestroyView() {
+        modernBrowser = null;
         super.onDestroyView();
         mClickedListener.removeListeners();
         mSelectedListener.removeListeners();
@@ -181,6 +184,10 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
             }
         } else {
             showViews = false;
+        }
+
+        if (mFolder != null) {
+            backgroundService.getValue().setBackground(mFolder);
         }
     }
 
@@ -448,17 +455,23 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
         public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                    RowPresenter.ViewHolder rowViewHolder, Row row) {
             if (!(item instanceof BaseRowItem)) {
+                if (modernBrowser != null) modernBrowser.select(null);
                 mTitle.setText(mFolder != null ? mFolder.getName() : "");
                 mInfoRow.removeAllViews();
                 mSummary.setText("");
                 mCurrentItem = null;
                 mCurrentRow = null;
-                // Fill in default background
-                backgroundService.getValue().clearBackgrounds();
+                // Fill in folder background instead of clearing to black
+                if (mFolder != null) {
+                    backgroundService.getValue().setBackground(mFolder);
+                } else {
+                    backgroundService.getValue().clearBackgrounds();
+                }
                 return;
             }
 
             BaseRowItem rowItem = (BaseRowItem) item;
+            if (modernBrowser != null) modernBrowser.select(rowItem.getBaseItem());
 
             mCurrentItem = rowItem;
             mCurrentRow = (ListRow) row;
@@ -476,7 +489,7 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
             ItemRowAdapter adapter = (ItemRowAdapter) ((ListRow) row).getAdapter();
             adapter.loadMoreItemsIfNeeded(adapter.indexOf(rowItem));
 
-            backgroundService.getValue().setBackground(rowItem.getBaseItem());
+            backgroundService.getValue().setBackground(rowItem.getBaseItem(), mFolder);
         }
     }
 }

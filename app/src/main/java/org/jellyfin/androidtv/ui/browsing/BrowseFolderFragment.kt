@@ -44,6 +44,7 @@ abstract class BrowseFolderFragment : BrowseSupportFragment(), RowLoader {
 		// Set BrowseSupportFragment properties
 		title = folder?.name
 		headersState = HEADERS_DISABLED
+		folder?.let { backgroundService.setBackground(it) }
 
 		// Add event listeners
 		onItemViewClickedListener = OnItemViewClickedListener { _: Presenter.ViewHolder?, item: Any?, _: RowPresenter.ViewHolder?, row: Row ->
@@ -57,12 +58,13 @@ abstract class BrowseFolderFragment : BrowseSupportFragment(), RowLoader {
 		}
 		onItemViewSelectedListener = OnItemViewSelectedListener { _: Presenter.ViewHolder?, item: Any?, _: RowPresenter.ViewHolder?, row: Row ->
 			if (item !is BaseRowItem) {
-				backgroundService.clearBackgrounds()
+				if (folder != null) backgroundService.setBackground(folder)
+				else backgroundService.clearBackgrounds()
 			} else {
 				val adapter = (row as? ListRow)?.adapter
 				if (adapter is ItemRowAdapter) adapter.loadMoreItemsIfNeeded(adapter.indexOf(item))
 
-				backgroundService.setBackground(item.baseItem)
+				backgroundService.setBackground(item.baseItem, folder)
 			}
 		}
 

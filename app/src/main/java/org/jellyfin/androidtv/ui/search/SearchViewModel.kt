@@ -44,15 +44,22 @@ class SearchViewModel(
 
 	private val _searchResultsFlow = MutableStateFlow<Collection<SearchResultGroup>>(emptyList())
 	val searchResultsFlow = _searchResultsFlow.asStateFlow()
+	private val _loading = MutableStateFlow(false)
+	val loading = _loading.asStateFlow()
+	private val _failedGroups = MutableStateFlow(0)
+	val failedGroups = _failedGroups.asStateFlow()
 
 	fun searchImmediately(query: String) = searchDebounced(query, 0.milliseconds)
 
 	fun searchDebounced(query: String, debounce: Duration = debounceDuration): Boolean {
 		val trimmed = query.trim()
-		if (trimmed == previousQuery) return false
+		if (trimmed == previousQuery && (debounce != Duration.ZERO || searchJob?.isActive != true) && _failedGroups.value == 0) return false
 		previousQuery = trimmed
 
 		searchJob?.cancel()
+		_failedGroups.value = 0
+		_searchResultsFlow.value = emptyList()
+		_loading.value = trimmed.isNotBlank()
 
 		if (trimmed.isBlank()) {
 			_searchResultsFlow.value = emptyList()
@@ -62,14 +69,17 @@ class SearchViewModel(
 		searchJob = viewModelScope.launch {
 			delay(debounce)
 
-			_searchResultsFlow.value = groups.map { (stringRes, itemKinds) ->
+			val responses = groups.map { (stringRes, itemKinds) ->
 				async {
 					val result = searchRepository.search(trimmed, itemKinds)
 					val items = result.getOrNull().orEmpty()
 
-					SearchResultGroup(stringRes, items)
+					SearchResultGroup(stringRes, items) to result.isFailure
 				}
 			}.awaitAll()
+			_failedGroups.value = responses.count { it.second }
+			_searchResultsFlow.value = responses.map { it.first }
+			_loading.value = false
 		}
 
 		return true

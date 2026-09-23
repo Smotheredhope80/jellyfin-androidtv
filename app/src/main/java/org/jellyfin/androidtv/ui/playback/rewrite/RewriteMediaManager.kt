@@ -26,6 +26,7 @@ import org.jellyfin.playback.jellyfin.queue.createBaseItemQueueEntry
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.MediaType
+import kotlin.time.Duration
 
 @Suppress("TooManyFunctions")
 class RewriteMediaManager(
@@ -227,6 +228,7 @@ class RewriteMediaManager(
 		private val api: ApiClient,
 		val items: List<BaseItemDto>,
 		val visibleInScreensaver: Boolean,
+		private val initialPosition: Duration? = null,
 	) : QueueSupplier {
 		override val size: Int
 			get() = items.size
@@ -235,6 +237,7 @@ class RewriteMediaManager(
 			val item = items.getOrNull(index) ?: return null
 			return createBaseItemQueueEntry(api, item).also {
 				it.visibleInScreensaver = visibleInScreensaver
+				if (index == 0) it.initialPosition = initialPosition
 			}
 		}
 	}

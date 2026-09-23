@@ -6,6 +6,9 @@ import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.OnItemViewSelectedListener
 import androidx.leanback.widget.Row
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.androidtv.constant.QueryType
 import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
@@ -21,11 +24,15 @@ class SearchFragmentDelegate(
 	private val itemLauncher: ItemLauncher,
 ) {
 	val rowsAdapter = MutableObjectAdapter<Row>(CustomListRowPresenter())
+	private val _selectedItem = MutableStateFlow<BaseItemDto?>(null)
+	val selectedItem = _selectedItem.asStateFlow()
 
 	fun showResults(searchResultGroups: Collection<SearchResultGroup>) {
+		_selectedItem.value = null
 		rowsAdapter.clear()
 		val adapters = mutableListOf<ItemRowAdapter>()
 		for ((labelRes, baseItems) in searchResultGroups) {
+			if (baseItems.isEmpty()) continue
 			val adapter = ItemRowAdapter(
 				context,
 				baseItems.toList(),
@@ -48,7 +55,8 @@ class SearchFragmentDelegate(
 	}
 
 	val onItemViewSelectedListener = OnItemViewSelectedListener { _, item, _, _ ->
-		val baseItem = item?.let { (item as BaseRowItem).baseItem }
+		val baseItem = (item as? BaseRowItem)?.baseItem
+		_selectedItem.value = baseItem
 		if (baseItem != null) {
 			backgroundService.setBackground(baseItem)
 		} else {

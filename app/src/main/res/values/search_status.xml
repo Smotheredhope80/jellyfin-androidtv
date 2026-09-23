@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="search_start_hint" tools:ignore="MissingTranslation">Search your library by title, person or artist</string>
+    <string name="search_empty_hint" tools:ignore="MissingTranslation">No results. Try a different search.</string>
+    <string name="search_failed_hint" tools:ignore="MissingTranslation">Search could not finish. Submit again to retry.</string>
+    <string name="search_partial_hint" tools:ignore="MissingTranslation">Results shown: %1$d. Some categories could not load; submit again to retry.</string>
+    <string name="search_results_shown" tools:ignore="MissingTranslation">Results shown: %1$d</string>
+</resources>

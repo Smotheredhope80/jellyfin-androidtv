@@ -39,8 +39,12 @@ private fun AppThemeBackground() {
 		attributes.recycle()
 
 		drawable?.toBitmap(
-			width = drawable.intrinsicWidth.coerceAtLeast(1),
-			height = drawable.intrinsicHeight.coerceAtLeast(1),
+			width = drawable.intrinsicWidth
+				.takeIf { it > 0 }
+				?: 256,
+			height = drawable.intrinsicHeight
+				.takeIf { it > 0 }
+				?: 256,
 		)?.asImageBitmap()
 	}
 

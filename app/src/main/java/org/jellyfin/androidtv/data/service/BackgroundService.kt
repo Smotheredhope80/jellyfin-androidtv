@@ -16,13 +16,17 @@ import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.auth.model.Server
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.constant.BackdropBehavior
+import org.jellyfin.androidtv.ui.home.libraryArtwork
 import org.jellyfin.androidtv.util.apiclient.getUrl
 import org.jellyfin.androidtv.util.apiclient.itemBackdropImages
+import org.jellyfin.androidtv.util.apiclient.itemImages
 import org.jellyfin.androidtv.util.apiclient.parentBackdropImages
+import org.jellyfin.androidtv.util.apiclient.parentImages
 import org.jellyfin.sdk.Jellyfin
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.imageApi
 import org.jellyfin.sdk.model.api.BaseItemDto
+import org.jellyfin.sdk.model.api.ImageType
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -49,6 +53,7 @@ class BackgroundService(
 	// Current background data
 	private var _backgrounds = emptyList<ImageBitmap>()
 	private var _currentIndex = 0
+	private var _currentBackdropData = emptyList<Any>()
 	private var _currentBackground = MutableStateFlow<ImageBitmap?>(null)
 	private var _blurBackground = MutableStateFlow(false)
 	private var _enabled = MutableStateFlow(true)
@@ -57,24 +62,49 @@ class BackgroundService(
 	val enabled get() = _enabled.asStateFlow()
 
 	/**
-	 * Use all available backdrops from [baseItem] as background.
+	 * Resolves backdrop images or artwork for a given [item].
 	 */
-	fun setBackground(baseItem: BaseItemDto?) {
+	private fun getBackdropData(item: BaseItemDto): List<Any> {
+		val urls = (item.itemBackdropImages + item.parentBackdropImages)
+			.map { it.getUrl(api) }
+		if (urls.isNotEmpty()) return urls
+
+		val localArtwork = item.libraryArtwork()
+		if (localArtwork != null) return listOf(localArtwork)
+
+		val thumb = item.itemImages[ImageType.THUMB]?.getUrl(api)
+			?: item.parentImages[ImageType.THUMB]?.getUrl(api)
+			?: item.parentImages[ImageType.ART]?.getUrl(api)
+		if (thumb != null) return listOf(thumb)
+
+		return emptyList()
+	}
+
+	/**
+	 * Use all available backdrops from [baseItem] (or [fallbackItem] if none found) as background.
+	 */
+	@JvmOverloads
+	fun setBackground(baseItem: BaseItemDto?, fallbackItem: BaseItemDto? = null) {
 		val backdropBehavior = userPreferences[UserPreferences.backdropBehavior]
 
-		// Check if item is set and backgrounds are enabled
-		if (baseItem == null || backdropBehavior == BackdropBehavior.DISABLED)
+		// Check if backgrounds are enabled
+		if (backdropBehavior == BackdropBehavior.DISABLED)
 			return clearBackgrounds()
 
 		// Enable blur for backdrops
 		_blurBackground.value = backdropBehavior == BackdropBehavior.BACKDROP_WITH_BLUR
 
-		// Get all backdrop urls
-		val backdropUrls = (baseItem.itemBackdropImages + baseItem.parentBackdropImages)
-			.map { it.getUrl(api) }
-			.toSet()
+		// Get all backdrop urls/artwork
+		val primaryData = baseItem?.let { getBackdropData(it) }.orEmpty()
+		val backdropData = if (primaryData.isNotEmpty()) {
+			primaryData
+		} else {
+			fallbackItem?.let { getBackdropData(it) }.orEmpty()
+		}
 
-		loadBackgrounds(backdropUrls)
+		if (backdropData.isEmpty()) return clearBackgrounds()
+
+		loadBackgroundData(backdropData)
 	}
 
 	/**
@@ -96,25 +126,24 @@ class BackgroundService(
 		val api = jellyfin.createApi(baseUrl = server.address)
 		val splashscreenUrl = api.imageApi.getSplashscreenUrl()
 
-		loadBackgrounds(setOf(splashscreenUrl))
+		loadBackgroundData(listOf(splashscreenUrl))
 	}
 
-	private fun loadBackgrounds(backdropUrls: Set<String>) {
-		if (backdropUrls.isEmpty()) return clearBackgrounds()
+	private fun loadBackgroundData(backdropData: List<Any>) {
+		if (backdropData.isEmpty()) return clearBackgrounds()
+		if (backdropData == _currentBackdropData && _backgrounds.isNotEmpty()) return
 
-		// Re-enable backgrounds if disabled
+		_currentBackdropData = backdropData
 		_enabled.value = true
 
-		// Cancel current loading job
 		loadBackgroundsJob?.cancel()
 		loadBackgroundsJob = scope.launch(Dispatchers.IO) {
-			_backgrounds = backdropUrls.mapNotNull { url ->
+			_backgrounds = backdropData.mapNotNull { data ->
 				imageLoader.execute(
-					request = ImageRequest.Builder(context).data(url).build()
+					request = ImageRequest.Builder(context).data(data).build()
 				).image?.toBitmap()?.asImageBitmap()
 			}
 
-			// Go to first background
 			_currentIndex = 0
 			update()
 		}
@@ -122,6 +151,7 @@ class BackgroundService(
 
 	fun clearBackgrounds() {
 		loadBackgroundsJob?.cancel()
+		_currentBackdropData = emptyList()
 
 		// Re-enable backgrounds if disabled
 		_enabled.value = true

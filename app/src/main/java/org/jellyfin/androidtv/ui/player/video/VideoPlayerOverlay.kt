@@ -1,5 +1,6 @@
 package org.jellyfin.androidtv.ui.player.video
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -35,6 +36,11 @@ fun VideoPlayerOverlay(
 	val entry by rememberQueueEntry(playbackManager)
 	val item = entry?.run { baseItemFlow.collectAsState(baseItem) }?.value
 
+	// Dismiss playback stats HUD on Back key rather than exiting video playback
+	BackHandler(enabled = showPlaybackInfo) {
+		showPlaybackInfo = false
+	}
+
 	Box(modifier = modifier) {
 		PlayerOverlayLayout(
 			visibilityState = visibilityState,
@@ -63,7 +69,8 @@ fun VideoPlayerOverlay(
 				playbackManager = playbackManager,
 				modifier = Modifier
 					.align(Alignment.TopStart)
-					.padding(start = 48.dp, top = 100.dp)
+					.padding(start = 48.dp, top = 88.dp),
+				onDismiss = { showPlaybackInfo = false },
 			)
 		}
 
