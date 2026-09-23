@@ -1,3 +1,9 @@
+## Git cleanup completed — 23 September 2026
+
+The previously dirty `experiment/mobile-inspired-tv-v12` checkout is clean after two reviewed commits: source/tests/assets `30326ff9dc60ea9fbdc5170161a210a6bb035cd2`, followed by maintained guidance and evidence documents `f81a57ff1c91bdd9ddd8caa9c7beb18b2b482af0`. Git history verified with `git fsck --full --no-reflogs` exit 0 (unreachable dangling objects reported, no integrity failure). A post-commit all-ref bundle was verified and hash-manifested at `S:\Homelab-Projects\01_Jellyfin-APK\20260923-235500-git-cleanup-committed`; no restore or independent off-NAS copy was tested. This documentation-only status entry follows the build recorded below. No push or upstream integration occurred.
+
+Next: refresh upstream refs and plan conflict resolution in an isolated checkout, then run source checks against the integrated tree. Keep the installed dev27 and V8.2 release records separate from Git cleanup; physical Shield acceptance remains outstanding where noted below.
+
 ## Git cleanup source checkpoint — 23 September 2026
 
 Committed the accumulated native Shield implementation, tests and artwork as `30326ff9dc60ea9fbdc5170161a210a6bb035cd2` (`Preserve Shield dev27 experimental source baseline`). The commit covers 64 app/playback paths. Prior to commit, the exact working files were retained in the [NAS recovery checkpoint](../../00_Project/GIT-CLEANUP-PLAN-20260923.md). A changed-text scan found no obvious embedded key/password assignment; the seven library banners have recorded original generation prompts and resource hashes in the dev11/dev12 candidate evidence.
