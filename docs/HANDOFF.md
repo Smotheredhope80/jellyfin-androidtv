@@ -595,3 +595,27 @@ Pending shared overview submission: [upstream synchronization plan](../../../Gar
 Started the planned cleanup with a recoverable source checkpoint and review sequence: [Git cleanup plan](../../00_Project/GIT-CLEANUP-PLAN-20260923.md). The checkout remained on `experiment/mobile-inspired-tv-v12` at `5abaa15745afe5016f2ae12f88845794ffe5ff54`, with 39 modified tracked files and 30 untracked files. The NAS checkpoint at `S:\Homelab-Projects\01_Jellyfin-APK\20260923-225216-git-cleanup-baseline` contains a verified full-history bundle, tracked patch, exact-byte working-file copies, untracked files, status, and hash manifest. All 69 copied working files matched their source hashes. `git diff --check` and reverse patch applicability passed; a clean-checkout restore has not been tested. The full source remains dirty and unmodified by Git operations; no stage/commit/branch movement, build, APK/device, or server action occurred.
 
 Next: review source/assets/tests and documentation into commit groups, verify ownership and private-data exclusions, then perform build/tests before reviewed commits. Recheck upstream divergence before any isolated integration. V8.2 remains the latest retained release; the recorded dev27 installations are unchanged. The baseline is a source recovery point, not build or physical acceptance. Documentation before-files: [local checkpoint](../../backups/20260923-230000-git-cleanup-docs/README.md). Shared chronology: [pending overview proposal](../../../Garro%20Homelab%20project/Knowledge/OVERVIEW-UPDATES/20260923-jellyfin-git-cleanup-baseline.md); submission does not imply application.
+
+## Shared Git workspace hygiene policy integration — 26 September 2026
+
+Reviewed portfolio Git workspace hygiene policy at `J:\My Drive\Garro Homelab project\Knowledge\GIT-WORKSPACE-HYGIENE.md` (effective 2026-09-26). Gary authorized fast-forward merge of the documentation link branch and worktree retirement.
+
+Merged `docs/shared-git-workspace-hygiene` (commit `e8b3c78f2ce287814508f4bd80aac08bb3e927d5`, adding policy link to `source/AGENTS.md`) into `experiment/mobile-inspired-tv-v12` via `--ff-only`. Retired linked worktree `E:\Git\jellyfin-androidtv-workspace-policy` cleanly without force after verifying push to `fork/docs/shared-git-workspace-hygiene`. Retained local and remote branch refs.
+
+Future enhancement backlog noted per Gary's direction: redesign/update artwork and behavior of top row folders (Music, Collections, Movies, Music).
+
+```text
+Git workspace observation time: 2026-09-26T12:50:48+01:00
+Repository/worktree: J:\My Drive\Jellyfin apk\source
+Branch or detached state and HEAD: experiment/mobile-inspired-tv-v12 at e8b3c78f2ce287814508f4bd80aac08bb3e927d5
+Upstream and ahead/behind: no upstream configured; behind origin/master 453, ahead 11
+Tracked/untracked/relevant ignored state: working tree clean (git status --porcelain=v1 -uall empty); ignored build outputs/local.properties intact
+Local commits, unpublished work, or attached review: e8b3c78f2 published to fork/docs/shared-git-workspace-hygiene (PR pending https://github.com/Smotheredhope80/jellyfin-androidtv/pull/new/docs/shared-git-workspace-hygiene); experiment branch unpushed
+Tests and qualification limits: documentation-only fast-forward merge; no APK build, unit test, or physical Shield test rerun
+Deployment/runtime/physical acceptance state: Dev27 remains installed and active on Gary's and Cindy's Shields
+Disposition: active
+Next owner and action: Gary / next agent to plan top row folder artwork/behavior updates (Music, Collections, Movies, Music) and upstream integration
+```
+
+Documentation before-copy: `backups/20260926-125100-git-hygiene-merge/HANDOFF.md.before.txt`.
+
