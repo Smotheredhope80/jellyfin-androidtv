@@ -25,6 +25,7 @@ The project root is this `source` directory. Its parent holds retained APKs, `re
 
 ## Development and preservation
 
+- Follow the shared Git/worktree policy at `J:\My Drive\Garro Homelab project\Knowledge\GIT-WORKSPACE-HYGIENE.md`. Its complete inventory, recovery checkpoint, reviewed-generation separation, handoff and retirement gates apply to this checkout in addition to the project-specific rules below.
 - Preserve unrelated tracked and untracked changes. Do not reset, stash, switch branches, overwrite, stage or commit someone else's work. Use a separate worktree for unrelated development when needed; never manufacture a clean state by discarding changes.
 - Do not delete or overwrite retained APKs, release folders, screenshots, source checkpoints, signing material or toolchains. Use distinct names for new artifacts and preserve the exact prior APK before building/installing a replacement. Build output directories are mutable, not archival storage.
 - Keep debug package separation (`org.jellyfin.androidtv.debug`) and the established signing identity for in-place personal debug upgrades. Never expose or commit private keys, passwords, server credentials, tokens, device identifiers or private configuration.
