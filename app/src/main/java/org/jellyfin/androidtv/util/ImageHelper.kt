@@ -11,6 +11,7 @@ import org.jellyfin.androidtv.util.apiclient.parentImages
 import org.jellyfin.androidtv.util.apiclient.seriesPrimaryImage
 import org.jellyfin.androidtv.util.apiclient.seriesThumbImage
 import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.extensions.imageApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
@@ -74,7 +75,9 @@ class ImageHelper(
 		maxWidth: Int? = null
 	): String? {
 		val image = item?.itemImages[ImageType.LOGO] ?: item?.parentImages[ImageType.LOGO]
-		return image?.getUrl(api, maxWidth = maxWidth)
+		return image?.getUrl(api, maxWidth = maxWidth) ?: item?.seriesLogoFallbackId()?.let {
+			api.imageApi.getItemImageUrl(itemId = it, imageType = ImageType.LOGO, maxWidth = maxWidth)
+		}
 	}
 
 	/**

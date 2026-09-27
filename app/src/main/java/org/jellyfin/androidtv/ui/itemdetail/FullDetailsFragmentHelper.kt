@@ -12,8 +12,6 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.model.DataRefreshService
 import org.jellyfin.androidtv.data.repository.ItemMutationRepository
 import org.jellyfin.androidtv.data.repository.ItemRepository
-import org.jellyfin.androidtv.ui.navigation.Destinations
-import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.util.TimeUtils
 import org.jellyfin.androidtv.util.apiclient.getSeriesOverview
 import org.jellyfin.androidtv.util.popupMenu
@@ -23,7 +21,6 @@ import org.jellyfin.androidtv.util.sdk.compat.copyWithUserData
 import org.jellyfin.androidtv.util.showIfNotEmpty
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.ApiClientException
-import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.liveTvApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
@@ -39,36 +36,6 @@ import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-
-fun FullDetailsFragment.deleteItem(
-	api: ApiClient,
-	item: BaseItemDto,
-	dataRefreshService: DataRefreshService,
-	navigationRepository: NavigationRepository,
-) = lifecycleScope.launch {
-	Timber.i("Deleting item ${item.name} (id=${item.id})")
-
-	try {
-		withContext(Dispatchers.IO) {
-			api.libraryApi.deleteItem(item.id)
-		}
-	} catch (error: ApiClientException) {
-		Timber.e(error, "Failed to delete item ${item.name} (id=${item.id})")
-		Toast.makeText(
-			context,
-			getString(R.string.item_deletion_failed, item.name),
-			Toast.LENGTH_LONG
-		).show()
-		return@launch
-	}
-
-	dataRefreshService.lastDeletedItemId = item.id
-
-	if (navigationRepository.canGoBack) navigationRepository.goBack()
-	else navigationRepository.navigate(Destinations.home)
-
-	Toast.makeText(context, getString(R.string.item_deleted, item.name), Toast.LENGTH_LONG).show()
-}
 
 fun FullDetailsFragment.showDetailsMenu(
 	view: View,
@@ -98,6 +65,9 @@ fun FullDetailsFragment.showDetailsMenu(
 
 	if (goToSeriesButton?.isVisible == false) {
 		item(getString(R.string.lbl_goto_series)) { gotoSeries() }
+	}
+	if (mPrevButton?.isVisible == false && mPrevItemId != null) {
+		item(getString(R.string.lbl_previous_episode)) { mPrevButton.performClick() }
 	}
 }.showIfNotEmpty()
 
@@ -155,6 +125,7 @@ fun FullDetailsFragment.togglePlayed() {
 }
 
 fun FullDetailsFragment.playTrailers() {
+	stopThemeMusic()
 	val localTrailerCount = mBaseItem.localTrailerCount ?: 0
 
 	// External trailer
@@ -206,21 +177,21 @@ fun FullDetailsFragment.getItem(id: UUID, callback: (item: BaseItemDto?) -> Unit
 
 fun FullDetailsFragment.populatePreviousButton() {
 	if (mBaseItem.type != BaseItemKind.EPISODE) return
+	val episodeId = mBaseItem.id
+	val seriesId = mBaseItem.seriesId ?: return
 
 	val api by inject<ApiClient>()
 
 	lifecycleScope.launch {
-		val siblings = withContext(Dispatchers.IO) {
-			api.tvShowsApi.getEpisodes(
-				seriesId = requireNotNull(mBaseItem.seriesId),
-				adjacentTo = mBaseItem.id,
-			).content
+		val previousItem = try {
+			withContext(Dispatchers.IO) {
+				api.tvShowsApi.getEpisodes(seriesId = seriesId, adjacentTo = episodeId).content
+			}.items.firstOrNull { it.id != episodeId }?.id
+		} catch (error: ApiClientException) {
+			Timber.w(error, "Could not load previous episode")
+			null
 		}
-
-		val previousItem = siblings.items
-			.filterNot { it.id == mBaseItem.id }
-			.firstOrNull()
-			?.id
+		if (view == null || mBaseItem.id != episodeId) return@launch
 
 		mPrevItemId = previousItem
 		mPrevButton.isVisible = previousItem != null

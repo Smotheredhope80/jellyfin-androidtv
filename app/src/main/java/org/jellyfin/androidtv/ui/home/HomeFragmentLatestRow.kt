@@ -11,11 +11,13 @@ import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.CollectionType
+import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 
 class HomeFragmentLatestRow(
 	private val userRepository: UserRepository,
 	private val userViews: Collection<BaseItemDto>,
+	private val modernHome: Boolean = false,
 ) : HomeFragmentRow {
 	override fun addToRowsAdapter(context: Context, cardPresenter: CardPresenter, rowsAdapter: MutableObjectAdapter<Row>) {
 		// Get configuration (to find excluded items)
@@ -28,7 +30,7 @@ class HomeFragmentLatestRow(
 			.map { item ->
 				// Create query and add it to a new row
 				val request = GetLatestMediaRequest(
-					fields = ItemRepository.browseFields,
+					fields = if (modernHome) ItemRepository.browseFields + ItemFields.MEDIA_STREAMS else ItemRepository.browseFields,
 					imageTypeLimit = 1,
 					parentId = item.id,
 					groupItems = true,

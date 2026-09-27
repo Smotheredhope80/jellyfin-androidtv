@@ -77,7 +77,8 @@ fun PlayerOverlayLayout(
 					.background(
 						brush = Brush.verticalGradient(
 							colors = listOf(
-								Color.Black.copy(alpha = 0.8f),
+								Color(0xEE070A12),
+								Color(0x99070A12),
 								Color.Transparent,
 							)
 						)
@@ -106,7 +107,8 @@ fun PlayerOverlayLayout(
 						brush = Brush.verticalGradient(
 							colors = listOf(
 								Color.Transparent,
-								Color.Black.copy(alpha = 0.8f),
+								Color(0x99070A12),
+								Color(0xF2070A12),
 							)
 						)
 					)

@@ -4,6 +4,7 @@ import static org.koin.java.KoinJavaComponent.inject;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -105,6 +106,11 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
     private Presenter.ViewHolder mGridViewHolder;
     private BaseGridView mGridView;
     private int mSelectedPosition = -1;
+    private Parcelable savedGridState;
+    private boolean restoringSelection;
+    private boolean resetSelectionOnRetrieve;
+    private boolean modernLibrary;
+    private ModernLibraryBrowser modernBrowser;
     private int mGridHeight = -1;
     private int mGridWidth = -1;
     private int mGridItemSpacingHorizontal = 0;
@@ -145,6 +151,11 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         mFolder = Json.Default.decodeFromString(BaseItemDto.Companion.serializer(), getArguments().getString(Extras.Folder));
         mParentId = mFolder.getId();
         mainTitle = mFolder.getName();
+        if (mFolder != null) {
+            backgroundService.getValue().setBackground(mFolder);
+        }
+        modernLibrary = ModernLibraryBrowser.isEnabled(mFolder);
+        if (modernLibrary) mGridHeight = Math.round(display.heightPixels / display.density - 286f);
         libraryPreferences = preferencesRepository.getValue().getLibraryPreferences(Objects.requireNonNull(mFolder.getDisplayPreferencesId()));
         mPosterSizeSetting = libraryPreferences.get(LibraryPreferences.Companion.getPosterSize());
         mImageType = libraryPreferences.get(LibraryPreferences.Companion.getImageType());
@@ -186,6 +197,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         binding = HorizontalGridBrowseBinding.inflate(inflater, container, false);
+        modernBrowser = ModernLibraryBrowser.install(binding, mFolder);
         return binding.getRoot();
     }
 
@@ -194,8 +206,16 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         super.onViewCreated(view, savedInstanceState);
 
         createGrid();
-        loadGrid();
+        if (!modernLibrary || mAdapter == null || mDirty) loadGrid();
         addTools();
+        if (modernBrowser != null) {
+            ModernLibraryBrowser.styleTools(binding.toolBar);
+            modernBrowser.select(mCurrentItem != null ? mCurrentItem.getBaseItem() : null);
+            if (mAdapter != null) {
+                setStatusText(mFolder.getName());
+                updateCounter(mAdapter.getTotalItems() > 0 ? Math.max(1, mSelectedPosition + 1) : 0);
+            }
+        }
     }
 
     @Override
@@ -206,8 +226,14 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
 
     @Override
     public void onDestroyView() {
+        if (modernLibrary && mGridView != null) {
+            mSelectedPosition = mGridView.getSelectedPosition();
+            if (mGridView.getLayoutManager() != null) savedGridState = mGridView.getLayoutManager().onSaveInstanceState();
+        }
+        mHandler.removeCallbacksAndMessages(null);
         super.onDestroyView();
 
+        modernBrowser = null;
         binding = null;
         mGridView = null;
     }
@@ -236,10 +262,17 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
 
     private void updateAdapter() {
         if (mGridView != null) {
+            int restorePosition = mSelectedPosition;
+            restoringSelection = modernLibrary;
             mGridPresenter.onBindViewHolder(mGridViewHolder, mAdapter);
-            if (mSelectedPosition != -1) {
-                mGridView.setSelectedPosition(mSelectedPosition);
+            if (restorePosition != -1) {
+                mGridView.setSelectedPosition(restorePosition);
             }
+            if (modernLibrary && savedGridState != null && mGridView.getLayoutManager() != null) {
+                mGridView.getLayoutManager().onRestoreInstanceState(savedGridState);
+                savedGridState = null;
+            }
+            restoringSelection = false;
         }
     }
 
@@ -271,6 +304,8 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
 
 
     public void setItem(BaseRowItem item) {
+        if (binding == null) return;
+        if (modernBrowser != null) modernBrowser.select(item != null ? item.getBaseItem() : null);
         if (item != null) {
             binding.title.setText(item.getFullName(requireContext()));
             InfoLayoutHelper.addInfoRow(requireContext(), item.getBaseItem(), binding.infoRow, true);
@@ -326,6 +361,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                 @Override
                 public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                            RowPresenter.ViewHolder rowViewHolder, Row row) {
+                    if (mGridView == null || binding == null || restoringSelection) return;
                     int position = mGridView.getSelectedPosition();
                     Timber.d("row selected position %s", position);
                     if (position != mSelectedPosition) {
@@ -417,6 +453,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                 default:
                     throw new IllegalStateException("Unexpected value: " + mPosterSizeSetting);
             }
+            if (modernLibrary && imageType == ImageType.POSTER) numCols = Math.max(5, numCols - 4);
             ((VerticalGridPresenter) mGridPresenter).setNumberOfColumns(numCols);
         } else if (mGridPresenter instanceof HorizontalGridPresenter) {
             int numRows;
@@ -439,6 +476,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                 default:
                     throw new IllegalStateException("Unexpected value: " + mPosterSizeSetting);
             }
+            if (modernLibrary && imageType == ImageType.POSTER) numRows = Math.max(1, numRows - 1);
             ((HorizontalGridPresenter) mGridPresenter).setNumberOfRows(numRows);
         }
     }
@@ -539,6 +577,17 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         mGridItemSpacingVertical = spacingVerticalInt;
         mGridPaddingLeft = paddingLeftInt;
         mGridPaddingTop = paddingTopInt;
+        if (modernLibrary) {
+            int verticalSpacing = Math.max(12, spacingVerticalInt);
+            if (mGridPresenter instanceof HorizontalGridPresenter) {
+                int rows = ((HorizontalGridPresenter) mGridPresenter).getNumberOfRows();
+                if (rows > 1) mCardHeight = Math.min(mCardHeight, Math.max(40, (mGridHeight - 2 * paddingTopInt - (rows - 1) * verticalSpacing) / rows));
+            }
+            mGridItemSpacingHorizontal = Utils.convertDpToPixel(requireContext(), Math.max(12, spacingHorizontalInt));
+            mGridItemSpacingVertical = Utils.convertDpToPixel(requireContext(), verticalSpacing);
+            mGridPaddingLeft = Utils.convertDpToPixel(requireContext(), paddingLeftInt);
+            mGridPaddingTop = Utils.convertDpToPixel(requireContext(), paddingTopInt);
+        }
     }
 
     private void setupQueries() {
@@ -569,6 +618,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         GridDirection gridDirection = libraryPreferences.get(LibraryPreferences.Companion.getGridDirection());
 
         if (mImageType != imageType || mPosterSizeSetting != posterSizeSetting || mGridDirection != gridDirection || mDirty) {
+            savedGridState = null;
             determiningPosterSize = true;
 
             mImageType = imageType;
@@ -661,12 +711,27 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
             @Override
             public void onResponse() {
                 if (!isActive()) return;
+                if (binding == null || mGridView == null) return;
+                if (resetSelectionOnRetrieve) {
+                    resetSelectionOnRetrieve = false;
+                    mGridView.setSelectedPosition(0);
+                    mCurrentItem = null;
+                }
                 setStatusText(mFolder.getName());
+                if (modernLibrary && mCurrentItem == null && mAdapter.size() > 0) {
+                    int selected = Math.max(0, Math.min(mGridView.getSelectedPosition(), mAdapter.size() - 1));
+                    Object selectedItem = mAdapter.get(selected);
+                    if (selectedItem instanceof BaseRowItem) {
+                        mCurrentItem = (BaseRowItem) selectedItem;
+                        setItem(mCurrentItem);
+                        updateCounter(selected + 1);
+                    }
+                }
                 if (mCurrentItem == null) { // don't mess-up pos via loadMoreItemsIfNeeded
                     setItem(null);
                     updateCounter(mAdapter.getTotalItems() > 0 ? 1 : 0);
                 }
-                mLetterButton.setVisibility(ItemSortBy.SORT_NAME.equals(mAdapter.getSortBy()) ? View.VISIBLE : View.GONE);
+                if (mLetterButton != null) mLetterButton.setVisibility(ItemSortBy.SORT_NAME.equals(mAdapter.getSortBy()) ? View.VISIBLE : View.GONE);
                 if (mAdapter.getItemsLoaded() == 0) {
                     mGridView.setFocusable(false);
                     mHandler.postDelayed(() -> {
@@ -677,7 +742,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                     }, 500);
                 } else if (mGridView != null) {
                     mGridView.setFocusable(true);
-                    mGridView.requestFocus();
+                    if (!modernLibrary || !binding.toolBar.hasFocus()) mGridView.requestFocus();
                 }
             }
         });
@@ -732,6 +797,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                 sortMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
+                        resetModernSelection();
                         mAdapter.setSortBy(Objects.requireNonNull(sortOptions.get(item.getItemId())));
                         mAdapter.Retrieve();
                         item.setChecked(true);
@@ -756,6 +822,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                 @Override
                 public void onClick(View v) {
                     FilterOptions filters = mAdapter.getFilters();
+                    resetModernSelection();
                     if (filters == null) filters = new FilterOptions();
 
                     filters.setUnwatchedOnly(!filters.isUnwatchedOnly());
@@ -778,6 +845,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
             @Override
             public void onClick(View v) {
                 FilterOptions filters = mAdapter.getFilters();
+                resetModernSelection();
                 if (filters == null) filters = new FilterOptions();
 
                 filters.setFavoriteOnly(!filters.isFavoriteOnly());
@@ -838,6 +906,7 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
 
             alphaPicker = new AlphaPickerView(requireContext(), null);
             alphaPicker.setOnAlphaSelected(letter -> {
+                resetModernSelection();
                 mAdapter.setStartLetter(letter.toString());
                 loadGrid();
                 dismiss();
@@ -908,8 +977,9 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         @Override
         public void run() {
             if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) return;
+            if (binding == null || mCurrentItem == null) return;
 
-            backgroundService.getValue().setBackground(mCurrentItem.getBaseItem());
+            backgroundService.getValue().setBackground(mCurrentItem.getBaseItem(), mFolder);
             setItem(mCurrentItem);
         }
     };
@@ -918,14 +988,21 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         @Override
         public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                    RowPresenter.ViewHolder rowViewHolder, Row row) {
+            if (binding == null || restoringSelection) return;
             mHandler.removeCallbacks(mDelayedSetItem);
             if (!(item instanceof BaseRowItem)) {
                 mCurrentItem = null;
+                if (modernBrowser != null) modernBrowser.select(null);
                 binding.title.setText(mainTitle);
-                //fill in default background
-                backgroundService.getValue().clearBackgrounds();
+                //fill in folder background instead of clearing to black
+                if (mFolder != null) {
+                    backgroundService.getValue().setBackground(mFolder);
+                } else {
+                    backgroundService.getValue().clearBackgrounds();
+                }
             } else {
                 mCurrentItem = (BaseRowItem) item;
+                if (modernBrowser != null) modernBrowser.select(mCurrentItem.getBaseItem());
                 binding.title.setText(mCurrentItem.getName(requireContext()));
                 binding.infoRow.removeAllViews();
                 mHandler.postDelayed(mDelayedSetItem, VIEW_SELECT_UPDATE_DELAY);
@@ -934,5 +1011,14 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                     mAdapter.loadMoreItemsIfNeeded(mAdapter.indexOf(mCurrentItem));
             }
         }
+    }
+
+    private void resetModernSelection() {
+        if (!modernLibrary) return;
+        savedGridState = null;
+        resetSelectionOnRetrieve = true;
+        mSelectedPosition = 0;
+        mCurrentItem = null;
+        if (modernBrowser != null) modernBrowser.select(null);
     }
 }

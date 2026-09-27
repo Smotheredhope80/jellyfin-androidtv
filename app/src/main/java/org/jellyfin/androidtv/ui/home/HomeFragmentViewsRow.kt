@@ -19,7 +19,7 @@ class HomeFragmentViewsRow(
 	}
 
 	override fun addToRowsAdapter(context: Context, cardPresenter: CardPresenter, rowsAdapter: MutableObjectAdapter<Row>) {
-		val presenter = if (small) smallCardPresenter else largeCardPresenter
+		val presenter = if (cardPresenter.modernHome) cardPresenter else if (small) smallCardPresenter else largeCardPresenter
 		val rowAdapter = ItemRowAdapter(context, GetUserViewsRequest, presenter, rowsAdapter)
 
 		val header = HeaderItem(context.getString(R.string.lbl_my_media))

@@ -1,9 +1,17 @@
 package org.jellyfin.playback.core.queue
 
 import org.jellyfin.playback.core.element.ElementsContainer
+import kotlin.time.Duration
 
 /**
  * The QueueEntry is a single item in a queue and can represent any supported media type.
  * All related data is stored in elements via the [ElementsContainer].
  */
-class QueueEntry : ElementsContainer()
+class QueueEntry : ElementsContainer() {
+	/** Requested launch position, consumed only when this entry is selected for playback. */
+	var initialPosition: Duration? = null
+
+	fun consumeInitialPosition(): Duration? = initialPosition?.coerceAtLeast(Duration.ZERO).also {
+		initialPosition = null
+	}
+}

@@ -9,6 +9,7 @@ import org.jellyfin.androidtv.ui.browsing.BrowseRowDef
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.MediaType
+import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetRecommendedProgramsRequest
 import org.jellyfin.sdk.model.api.request.GetRecordingsRequest
@@ -17,15 +18,17 @@ import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
 class HomeFragmentHelper(
 	private val context: Context,
 	private val userRepository: UserRepository,
+	private val modernHome: Boolean = false,
 ) {
+	private val browseFields get() = if (modernHome) ItemRepository.browseFields + ItemFields.MEDIA_STREAMS else ItemRepository.browseFields
 	fun loadRecentlyAdded(userViews: Collection<BaseItemDto>): HomeFragmentRow {
-		return HomeFragmentLatestRow(userRepository, userViews)
+		return HomeFragmentLatestRow(userRepository, userViews, modernHome)
 	}
 
 	fun loadResume(title: String, includeMediaTypes: Collection<MediaType>): HomeFragmentRow {
 		val query = GetResumeItemsRequest(
 			limit = ITEM_LIMIT_RESUME,
-			fields = ItemRepository.browseFields,
+			fields = browseFields,
 			imageTypeLimit = 1,
 			enableTotalRecordCount = false,
 			mediaTypes = includeMediaTypes,
@@ -58,7 +61,7 @@ class HomeFragmentHelper(
 			imageTypeLimit = 1,
 			limit = ITEM_LIMIT_NEXT_UP,
 			enableResumable = false,
-			fields = ItemRepository.browseFields
+			fields = browseFields
 		)
 
 		return HomeFragmentBrowseRowDefRow(BrowseRowDef(context.getString(R.string.lbl_next_up), query, arrayOf(ChangeTriggerType.TvPlayback)))

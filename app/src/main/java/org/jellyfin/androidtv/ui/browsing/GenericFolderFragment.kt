@@ -1,5 +1,17 @@
 package org.jellyfin.androidtv.ui.browsing
 
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.RelativeLayout
+import org.jellyfin.androidtv.ui.AsyncImageView
+import org.jellyfin.androidtv.ui.itemdetail.ModernDetailsStyle
+import org.jellyfin.androidtv.ui.itemdetail.ThemeMusicController
+import org.jellyfin.androidtv.util.ImageHelper
+import org.jellyfin.androidtv.util.dp
+import org.koin.android.ext.android.inject
+
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.querying.GetSpecialsRequest
 import org.jellyfin.androidtv.data.repository.ItemRepository
@@ -10,6 +22,43 @@ import org.jellyfin.sdk.model.api.SortOrder
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
 
 class GenericFolderFragment : EnhancedBrowseFragment() {
+	private var themeMusic: ThemeMusicController? = null
+	private val imageHelper by inject<ImageHelper>()
+
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		if (mFolder.type != BaseItemKind.SEASON) return
+		themeMusic = ThemeMusicController(this).also { it.select(mFolder) }
+		if (!ModernDetailsStyle.isEnabled(mFolder.type)) return
+		val root = view as? RelativeLayout ?: return
+		val logo = AsyncImageView(requireContext()).apply {
+			id = View.generateViewId()
+			visibility = View.INVISIBLE
+			scaleType = ImageView.ScaleType.FIT_CENTER
+			contentDescription = mFolder.seriesName
+			isFocusable = false
+		}
+		root.addView(logo, RelativeLayout.LayoutParams(300.dp(requireContext()), 64.dp(requireContext())).apply {
+			addRule(RelativeLayout.ALIGN_PARENT_END)
+			topMargin = 12.dp(requireContext())
+			marginEnd = 180.dp(requireContext())
+		})
+		logo.loadWithResult(url = imageHelper.getLogoImageUrl(mFolder, 900)) { loaded ->
+			if (this@GenericFolderFragment.view !== root) return@loadWithResult
+			logo.visibility = if (loaded) View.VISIBLE else View.INVISIBLE
+			(mTitle.layoutParams as RelativeLayout.LayoutParams).apply {
+				addRule(RelativeLayout.START_OF, if (loaded) logo.id else R.id.npBug)
+				mTitle.layoutParams = this
+			}
+		}
+	}
+
+	override fun onDestroyView() {
+		themeMusic?.dispose()
+		themeMusic = null
+		super.onDestroyView()
+	}
+
 	companion object {
 		private val showSpecialViewTypes = setOf(
 			BaseItemKind.COLLECTION_FOLDER,

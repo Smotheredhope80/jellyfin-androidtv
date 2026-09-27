@@ -43,6 +43,7 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		 * Select the app theme
 		 */
 		var appTheme = enumPreference("app_theme", AppTheme.DARK)
+		var tvThemeMusic = booleanPreference("tv_theme_music", true)
 
 		/**
 		 * Behavior of app background while browsing

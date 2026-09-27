@@ -2,10 +2,15 @@ package org.jellyfin.androidtv.ui.presentation
 
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,10 +27,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.findViewTreeCompositionContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.leanback.widget.Presenter
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
@@ -34,6 +42,8 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.constant.ImageType
+import org.jellyfin.androidtv.preference.UserPreferences
+import org.jellyfin.androidtv.preference.constant.AppTheme
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.composable.AsyncImage
@@ -45,8 +55,19 @@ import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowType
 import org.jellyfin.androidtv.ui.itemhandling.GridButtonBaseRowItem
 import org.jellyfin.androidtv.util.ImageHelper
+import org.jellyfin.androidtv.ui.home.homePlaybackProgress
+import org.jellyfin.androidtv.ui.home.homeEpisodeLabel
+import org.jellyfin.androidtv.ui.home.libraryArtwork
+import coil3.compose.rememberAsyncImagePainter
+import androidx.compose.ui.layout.ContentScale
+import org.jellyfin.androidtv.util.TimeUtils
 import org.jellyfin.androidtv.util.apiclient.JellyfinImage
 import org.jellyfin.androidtv.util.apiclient.getUrl
+import org.jellyfin.androidtv.util.apiclient.itemBackdropImages
+import org.jellyfin.androidtv.util.apiclient.parentBackdropImages
+import org.jellyfin.androidtv.util.apiclient.itemImages
+import org.jellyfin.androidtv.util.apiclient.parentImages
+import org.jellyfin.androidtv.util.apiclient.seriesPrimaryImage
 import org.jellyfin.design.Tokens
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -56,8 +77,11 @@ class CardPresenter(
 	val showInfo: Boolean,
 	val imageType: ImageType,
 	val staticHeight: Int,
-	val uniformAspect: Boolean,
+	val uniformAspect: Boolean = false,
+	val modernHome: Boolean = false,
 ) : Presenter() {
+	constructor(showInfo: Boolean, imageType: ImageType, staticHeight: Int, uniformAspect: Boolean) :
+		this(showInfo, imageType, staticHeight, uniformAspect, false)
 	constructor(showInfo: Boolean, imageType: ImageType, staticHeight: Int) : this(showInfo, imageType, staticHeight, false)
 	constructor(showInfo: Boolean, staticHeight: Int) : this(showInfo, ImageType.POSTER, staticHeight)
 	constructor(showInfo: Boolean) : this(showInfo, 150)
@@ -101,7 +125,8 @@ class CardPresenter(
 					showInfo = showInfo,
 					imageType = imageType,
 					staticHeight = staticHeight,
-					uniformAspect = uniformAspect,
+						uniformAspect = uniformAspect,
+						modernHome = modernHome,
 				)
 			}
 
@@ -129,7 +154,11 @@ private data class BaseRowItemDisplayConfig(
 	val scaleType: ImageView.ScaleType? = null,
 )
 
-private fun BaseRowItem.getDisplayConfig(imageType: ImageType, uniformAspect: Boolean): BaseRowItemDisplayConfig = when (baseRowType) {
+private fun BaseRowItem.getDisplayConfig(
+	imageType: ImageType,
+	uniformAspect: Boolean,
+	modernHome: Boolean = false,
+): BaseRowItemDisplayConfig = when (baseRowType) {
 	BaseRowType.BaseItem -> {
 		val preferSeriesPoster = this is BaseItemDtoBaseRowItem && preferSeriesPoster
 		val primaryAspectRatio = baseItem?.primaryImageAspectRatio?.toFloat()
@@ -168,7 +197,7 @@ private fun BaseRowItem.getDisplayConfig(imageType: ImageType, uniformAspect: Bo
 				iconRes = R.drawable.ic_tv
 			)
 
-			BaseItemKind.EPISODE -> when (preferSeriesPoster) {
+			BaseItemKind.EPISODE -> when (preferSeriesPoster || (modernHome && imageType == ImageType.POSTER)) {
 				true -> base.copy(
 					aspectRatio = ImageHelper.ASPECT_RATIO_2_3.toFloat(),
 					iconRes = R.drawable.ic_tv
@@ -277,31 +306,109 @@ private fun CardViewHolderContent(
 	imageType: ImageType,
 	staticHeight: Int,
 	uniformAspect: Boolean,
+	modernHome: Boolean,
 ) {
 	val context = LocalContext.current
 	val localDensity = LocalDensity.current
+	val userPreferences = koinInject<UserPreferences>()
+	val elegantFin = userPreferences[UserPreferences.appTheme] == AppTheme.ELEGANT_FIN
 
-	val title = remember(item, context) { item?.getCardName(context) }
-	val subtitle = remember(item, context) { item?.getSubText(context) }
-	val displayConfig = remember(item, imageType, uniformAspect) { item?.getDisplayConfig(imageType, uniformAspect) }
+	val cardShape = if (elegantFin) {
+		RoundedCornerShape(12.dp)
+	} else {
+		JellyfinTheme.shapes.medium
+	}
+
+	val cardFocusBorder = if (elegantFin && focused) {
+		Modifier.border(
+			width = 2.dp,
+			color = colorResource(R.color.theme_elegantfin_accent),
+			shape = cardShape,
+		)
+	} else {
+		Modifier
+	}
+
+	val displayConfig = remember(item, imageType, uniformAspect, modernHome) { item?.getDisplayConfig(imageType, uniformAspect, modernHome) }
+	val isHomeEpisode = modernHome && item?.baseItem?.type == BaseItemKind.EPISODE
+	val title = remember(item, context, isHomeEpisode) {
+		if (isHomeEpisode) {
+			item?.baseItem?.seriesName ?: item?.getCardName(context)
+		} else {
+			item?.getCardName(context)
+		}
+	}
+	val progress = if (modernHome) item?.baseItem?.homePlaybackProgress() else null
+	val episodeLabel = remember(item, isHomeEpisode) { item?.baseItem?.takeIf { isHomeEpisode }?.homeEpisodeLabel() }
+	val subtitle = if (episodeLabel != null) {
+		episodeLabel
+	} else if (progress != null) {
+		stringResource(R.string.lbl_playback_control_remaining, TimeUtils.formatMillis(progress.remainingMillis))
+	} else remember(item, context) {
+		item?.getSubText(context)
+	}
 	if (item == null || displayConfig == null) return
 
-	val image = displayConfig.image
+	if (modernHome && item.baseItem?.type in setOf(BaseItemKind.USER_VIEW, BaseItemKind.COLLECTION_FOLDER)) {
+		// The containing Leanback view owns focus/clicks; no nested Compose focus target.
+		Row(
+			modifier = Modifier.width(156.dp).height(40.dp)
+				.background(colorResource(R.color.theme_elegantfin_surface), cardShape)
+				.then(cardFocusBorder).padding(horizontal = 12.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(8.dp),
+		) {
+			Image(painterResource(R.drawable.ic_folder), contentDescription = null, modifier = Modifier.size(18.dp))
+			Text(title.orEmpty(), color = Tokens.Color.colorWhite, maxLines = 1, overflow = TextOverflow.Ellipsis)
+		}
+		return
+	}
+
+	val image = if (modernHome && item.baseItem?.type == BaseItemKind.EPISODE) {
+		val ep = item.baseItem
+		if (displayConfig.aspectRatio <= 1f) {
+			ep?.parentImages?.get(org.jellyfin.sdk.model.api.ImageType.PRIMARY)
+				?: ep?.seriesPrimaryImage
+				?: displayConfig.image
+		} else {
+			// Landscape/thumb view (Next Up, Continue Watching): individual episode scene thumbnail!
+			ep?.itemImages?.get(org.jellyfin.sdk.model.api.ImageType.PRIMARY)
+				?: ep?.itemImages?.get(org.jellyfin.sdk.model.api.ImageType.THUMB)
+				?: ep?.itemBackdropImages?.firstOrNull()
+				?: ep?.parentBackdropImages?.firstOrNull()
+				?: displayConfig.image
+		}
+	} else if (modernHome && displayConfig.aspectRatio > 1f) {
+		item.baseItem?.itemImages?.get(org.jellyfin.sdk.model.api.ImageType.THUMB)
+			?: item.baseItem?.itemBackdropImages?.firstOrNull()
+			?: item.baseItem?.parentBackdropImages?.firstOrNull()
+			?: item.baseItem?.itemImages?.get(org.jellyfin.sdk.model.api.ImageType.PRIMARY)
+			?: displayConfig.image
+	} else displayConfig.image
 	val aspectRatio = displayConfig.aspectRatio.takeIf { it >= 0.1f }
 		?: image?.aspectRatio?.takeIf { it >= 0.1f } ?: 1f
 
-	val size = when (item.staticHeight) {
-		true -> DpSize(staticHeight.dp * aspectRatio, staticHeight.dp)
-		false if (aspectRatio > 1f) -> DpSize(130.dp * aspectRatio, 130.dp)
+	val size = when {
+		item.staticHeight -> DpSize(staticHeight.dp * aspectRatio, staticHeight.dp)
+		aspectRatio > 1f -> DpSize(130.dp * aspectRatio, 130.dp)
+		modernHome && (item.baseItem?.type == BaseItemKind.MUSIC_ALBUM || item.baseItem?.type == BaseItemKind.AUDIO) -> DpSize(130.dp, 130.dp)
 		else -> DpSize(150.dp * aspectRatio, 150.dp)
 	}
 
 	val usePreview = displayConfig.overrideShowInfo ?: showInfo
+	val localArtwork = if (elegantFin) item.baseItem?.libraryArtwork() else null
 
 	val card = @Composable {
 		ItemCard(
 			image = {
-				if (image != null) {
+				if (localArtwork != null) {
+					Image(
+						painter = rememberAsyncImagePainter(localArtwork),
+						contentDescription = null,
+						contentScale = ContentScale.Crop,
+						modifier = Modifier.fillMaxSize(),
+					)
+				} else if (image != null) {
 					val api = koinInject<ApiClient>()
 					AsyncImage(
 						url = image.getUrl(
@@ -367,6 +474,8 @@ private fun CardViewHolderContent(
 			},
 			modifier = Modifier
 				.size(size)
+				.then(cardFocusBorder),
+			shape = cardShape,
 		)
 	}
 
@@ -385,7 +494,7 @@ private fun CardViewHolderContent(
 						maxLines = 1,
 						overflow = TextOverflow.Ellipsis,
 						textAlign = TextAlign.Center,
-						modifier = Modifier.then(focusModifier),
+						modifier = Modifier.fillMaxWidth().then(focusModifier),
 					)
 				}
 			},
@@ -396,7 +505,7 @@ private fun CardViewHolderContent(
 						maxLines = 1,
 						overflow = TextOverflow.Ellipsis,
 						textAlign = TextAlign.Center,
-						modifier = Modifier.then(focusModifier),
+						modifier = Modifier.fillMaxWidth().then(focusModifier),
 					)
 				}
 			},

@@ -5,11 +5,16 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -36,6 +41,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.key.Key
@@ -43,12 +49,14 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -60,6 +68,7 @@ import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.button.Button
 import org.jellyfin.androidtv.ui.base.button.ButtonDefaults
 import org.jellyfin.androidtv.ui.base.button.IconButton
+import org.jellyfin.androidtv.ui.base.button.IconButtonDefaults
 import org.jellyfin.androidtv.ui.base.popover.Popover
 import org.jellyfin.androidtv.ui.composable.rememberPlayerPositionInfo
 import org.jellyfin.androidtv.ui.player.base.PlayerSeekbar
@@ -108,7 +117,8 @@ fun VideoPlayerControls(
 			)
 		} else {
 			Row(
-				horizontalArrangement = Arrangement.spacedBy(12.dp),
+				horizontalArrangement = Arrangement.spacedBy(14.dp),
+				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
 					.focusRestorer()
 					.focusGroup()
@@ -141,12 +151,52 @@ fun VideoPlayerControls(
 				playbackManager = playbackManager,
 				modifier = Modifier
 					.fillMaxWidth()
-					.height(4.dp)
+					.height(6.dp)
 			)
 
-			PlaybackTimingRow(playbackManager)
+			PlaybackTimingRow(playbackManager, item)
 		}
 	}
+}
+
+@Composable
+private fun PlayerIconButton(
+	onClick: () -> Unit,
+	modifier: Modifier = Modifier,
+	enabled: Boolean = true,
+	isHero: Boolean = false,
+	shape: Shape = CircleShape,
+	content: @Composable BoxScope.() -> Unit,
+) {
+	val interactionSource = remember { MutableInteractionSource() }
+	val isFocused by interactionSource.collectIsFocusedAsState()
+
+	val accentColor = colorResource(R.color.theme_elegantfin_accent)
+	val colors = ButtonDefaults.colors(
+		containerColor = if (isHero) accentColor else Color(0x33FFFFFF),
+		contentColor = Color.White,
+		focusedContainerColor = if (isHero) Color(0xFF8F77F7) else accentColor,
+		focusedContentColor = Color.White,
+		disabledContainerColor = Color(0x14FFFFFF),
+		disabledContentColor = Color(0x4DFFFFFF),
+	)
+
+	val borderModifier = if (isFocused) {
+		Modifier.border(2.dp, Color(0xFFD8B4FE), shape)
+	} else {
+		Modifier.border(1.dp, Color(0x26FFFFFF), shape)
+	}
+
+	IconButton(
+		onClick = onClick,
+		modifier = modifier.then(borderModifier),
+		enabled = enabled,
+		shape = shape,
+		colors = colors,
+		contentPadding = if (isHero) PaddingValues(13.dp) else IconButtonDefaults.ContentPadding,
+		interactionSource = interactionSource,
+		content = content,
+	)
 }
 
 @Composable
@@ -156,7 +206,7 @@ private fun AudioTrackButton(
 	val tracks by backend.audioTracks.collectAsState()
 	var expanded by remember { mutableStateOf(false) }
 
-	IconButton(
+	PlayerIconButton(
 		enabled = tracks.isNotEmpty(),
 		onClick = { expanded = true },
 	) {
@@ -184,7 +234,7 @@ private fun SubtitleTrackButton(
 	val tracks by backend.subtitleTracks.collectAsState()
 	var expanded by remember { mutableStateOf(false) }
 
-	IconButton(
+	PlayerIconButton(
 		enabled = tracks.isNotEmpty(),
 		onClick = { expanded = true },
 	) {
@@ -228,18 +278,52 @@ private fun TrackSelectionPopover(
 		Column(
 			verticalArrangement = Arrangement.spacedBy(6.dp),
 			modifier = Modifier
-				.width(360.dp)
-				.heightIn(max = 420.dp)
+				.width(520.dp)
+				.heightIn(max = 380.dp)
+				.background(Color(0xF00B0F19), RoundedCornerShape(12.dp))
+				.border(1.dp, colorResource(R.color.theme_elegantfin_border), RoundedCornerShape(12.dp))
 				.verticalScroll(rememberScrollState())
-				.padding(8.dp),
+				.padding(10.dp),
 		) {
+			val accentColor = colorResource(R.color.theme_elegantfin_accent)
 			if (includeNone) {
+				val noneSelected = !tracks.any(PlayerTrackOption::selected)
 				Button(
 					onClick = onNoneSelected,
 					modifier = Modifier.fillMaxWidth(),
+					shape = RoundedCornerShape(8.dp),
+					contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+					colors = ButtonDefaults.colors(
+						containerColor = if (noneSelected) colorResource(R.color.theme_elegantfin_surface) else Color(0x1FFFFFFF),
+						contentColor = Color.White,
+						focusedContainerColor = accentColor,
+						focusedContentColor = Color.White,
+					),
 				) {
-					val subtitlesEnabled = tracks.any(PlayerTrackOption::selected)
-					Text(if (subtitlesEnabled) stringResource(R.string.lbl_none) else "✓  ${stringResource(R.string.lbl_none)}")
+					Row(
+						modifier = Modifier.fillMaxWidth(),
+						verticalAlignment = Alignment.CenterVertically,
+						horizontalArrangement = Arrangement.spacedBy(10.dp),
+					) {
+						if (noneSelected) {
+							Text(
+								text = "✓",
+								color = Color.White,
+								fontWeight = FontWeight.Bold,
+								fontSize = 14.sp,
+							)
+						} else {
+							Spacer(modifier = Modifier.width(14.dp))
+						}
+						Text(
+							text = stringResource(R.string.lbl_none),
+							modifier = Modifier.weight(1f),
+							fontSize = 13.sp,
+							lineHeight = 18.sp,
+							maxLines = 1,
+							overflow = TextOverflow.Ellipsis,
+						)
+					}
 				}
 			}
 
@@ -247,8 +331,40 @@ private fun TrackSelectionPopover(
 				Button(
 					onClick = { onTrackSelected(track) },
 					modifier = Modifier.fillMaxWidth(),
+					shape = RoundedCornerShape(8.dp),
+					contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+					colors = ButtonDefaults.colors(
+						containerColor = if (track.selected) colorResource(R.color.theme_elegantfin_surface) else Color(0x1FFFFFFF),
+						contentColor = Color.White,
+						focusedContainerColor = accentColor,
+						focusedContentColor = Color.White,
+					),
 				) {
-					Text(if (track.selected) "✓  ${track.label}" else track.label)
+					Row(
+						modifier = Modifier.fillMaxWidth(),
+						verticalAlignment = Alignment.CenterVertically,
+						horizontalArrangement = Arrangement.spacedBy(10.dp),
+					) {
+						if (track.selected) {
+							Text(
+								text = "✓",
+								color = Color.White,
+								fontWeight = FontWeight.Bold,
+								fontSize = 14.sp,
+							)
+						} else {
+							Spacer(modifier = Modifier.width(14.dp))
+						}
+						Text(
+							text = track.label,
+							modifier = Modifier.weight(1f),
+							fontSize = 13.sp,
+							lineHeight = 18.sp,
+							maxLines = 3,
+							overflow = TextOverflow.Ellipsis,
+							softWrap = true,
+						)
+					}
 				}
 			}
 		}
@@ -261,7 +377,7 @@ private fun ChapterSelectButton(
 	expanded: Boolean,
 	onToggle: () -> Unit,
 ) {
-	IconButton(
+	PlayerIconButton(
 		enabled = chapters.isNotEmpty(),
 		onClick = onToggle,
 	) {
@@ -292,7 +408,7 @@ private fun ChapterStrip(
 			modifier = Modifier
 				.fillMaxWidth()
 				.height(194.dp)
-				.background(Color.Black.copy(alpha = 0.45f))
+				.background(Color(0xEE070A12))
 		)
 
 		Row(
@@ -341,13 +457,13 @@ private fun ChapterStrip(
 						modifier = Modifier
 							.fillMaxWidth()
 							.height(110.dp)
-							.background(Color.DarkGray)
+							.background(Color(0xFF1E293B), RoundedCornerShape(6.dp))
 							.border(
-								width = if (focused) 6.dp else 0.dp,
-								color = if (focused) Color.White else Color.Transparent,
-								shape = JellyfinTheme.shapes.small,
+								width = if (focused) 4.dp else 1.dp,
+								color = if (focused) colorResource(R.color.theme_elegantfin_accent) else Color(0x33FFFFFF),
+								shape = RoundedCornerShape(6.dp),
 							)
-							.padding(if (focused) 6.dp else 0.dp)
+							.padding(if (focused) 4.dp else 0.dp)
 							.clipToBounds(),
 					) {
 						Image(
@@ -387,7 +503,7 @@ private fun PlaybackSpeedButton(
 	var expanded by remember { mutableStateOf(false) }
 	val speeds = remember { listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f) }
 
-	IconButton(onClick = { expanded = true }) {
+	PlayerIconButton(onClick = { expanded = true }) {
 		Icon(
 			imageVector = ImageVector.vectorResource(R.drawable.ic_playback_speed),
 			contentDescription = stringResource(R.string.lbl_playback_speed),
@@ -405,9 +521,12 @@ private fun PlaybackSpeedButton(
 			modifier = Modifier
 				.width(180.dp)
 				.heightIn(max = 420.dp)
+				.background(Color(0xF00B0F19), RoundedCornerShape(8.dp))
+				.border(1.dp, colorResource(R.color.theme_elegantfin_border), RoundedCornerShape(8.dp))
 				.verticalScroll(rememberScrollState())
 				.padding(8.dp),
 		) {
+			val accentColor = colorResource(R.color.theme_elegantfin_accent)
 			speeds.forEach { speed ->
 				val label = String.format(Locale.US, "%.2fx", speed)
 				Button(
@@ -416,6 +535,12 @@ private fun PlaybackSpeedButton(
 						expanded = false
 					},
 					modifier = Modifier.fillMaxWidth(),
+					colors = ButtonDefaults.colors(
+						containerColor = if (currentSpeed == speed) colorResource(R.color.theme_elegantfin_surface) else Color(0x1FFFFFFF),
+						contentColor = Color.White,
+						focusedContainerColor = accentColor,
+						focusedContentColor = Color.White,
+					),
 				) {
 					Text(if (currentSpeed == speed) "✓  $label" else label)
 				}
@@ -430,7 +555,8 @@ private fun PlayPauseButton(
 	playState: PlayState,
 ) {
 	val focusRequester = remember { FocusRequester() }
-	IconButton(
+	PlayerIconButton(
+		isHero = true,
 		onClick = {
 			when (playState) {
 				PlayState.STOPPED,
@@ -471,7 +597,7 @@ private fun PlayPauseButton(
 @Composable
 private fun RewindButton(
 	playbackManager: PlaybackManager,
-) = IconButton(
+) = PlayerIconButton(
 	onClick = { playbackManager.state.rewind() },
 ) {
 	Icon(
@@ -483,7 +609,7 @@ private fun RewindButton(
 @Composable
 private fun FastForwardButton(
 	playbackManager: PlaybackManager,
-) = IconButton(
+) = PlayerIconButton(
 	onClick = { playbackManager.state.fastForward() },
 ) {
 	Icon(
@@ -499,7 +625,7 @@ private fun PreviousEntryButton(
 	val entryIndex by playbackManager.queue.entryIndex.collectAsState()
 	val coroutineScope = rememberCoroutineScope()
 
-	IconButton(
+	PlayerIconButton(
 		enabled = entryIndex > 0,
 		onClick = {
 			coroutineScope.launch {
@@ -521,7 +647,7 @@ private fun NextEntryButton(
 	val entryIndex by playbackManager.queue.entryIndex.collectAsState()
 	val coroutineScope = rememberCoroutineScope()
 
-	IconButton(
+	PlayerIconButton(
 		enabled = entryIndex < playbackManager.queue.estimatedSize - 1,
 		onClick = {
 			coroutineScope.launch {
@@ -549,6 +675,7 @@ private fun Duration.formatted(includeHours: Boolean): String {
 @Composable
 private fun PlaybackTimingRow(
 	playbackManager: PlaybackManager,
+	item: BaseItemDto? = null,
 ) {
 	val context = LocalContext.current
 	val positionInfo by rememberPlayerPositionInfo(playbackManager, precision = 1.seconds)
@@ -582,19 +709,31 @@ private fun PlaybackTimingRow(
 	val remainingText = stringResource(R.string.lbl_playback_control_remaining, realTimeRemaining.formatted(includeHours = true))
 	val endsText = stringResource(R.string.lbl_playback_control_ends, timeFormatter.format(endTime))
 
+	val activeChapterName by remember(positionInfo.active, item?.chapters) {
+		derivedStateOf {
+			val ticks = positionInfo.active.inWholeMilliseconds * 10000L
+			item?.chapters?.lastOrNull { it.startPositionTicks <= ticks }?.name
+		}
+	}
+
 	Row(
 		horizontalArrangement = Arrangement.spacedBy(16.dp),
 		verticalAlignment = Alignment.CenterVertically,
 		modifier = Modifier.fillMaxWidth(),
 	) {
+		val leadText = if (activeChapterName.isNullOrBlank()) {
+			"$currentTimeText  •  $remainingText  •  $endsText"
+		} else {
+			"$currentTimeText  •  $activeChapterName  •  $endsText"
+		}
 		Text(
-			text = "$currentTimeText  •  $remainingText  •  $endsText",
-			style = LocalTextStyle.current.copy(color = Color.White)
+			text = leadText,
+			style = LocalTextStyle.current.copy(color = Color(0xFFCBD5E1), fontSize = 13.sp)
 		)
 		Spacer(Modifier.weight(1f))
 		Text(
 			text = positionText,
-			style = LocalTextStyle.current.copy(color = Color.White)
+			style = LocalTextStyle.current.copy(color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
 		)
 	}
 }
@@ -604,7 +743,7 @@ private fun MoreOptionsButton(
 	content: @Composable () -> Unit,
 ) = Box {
 	var expanded by remember { mutableStateOf(false) }
-	IconButton(
+	PlayerIconButton(
 		onClick = { expanded = true },
 	) {
 		Icon(
@@ -632,7 +771,7 @@ private fun MoreOptionsButton(
 @Composable
 fun PlaybackInfoButton(
 	onClick: () -> Unit,
-) = IconButton(
+) = PlayerIconButton(
 	onClick = onClick,
 ) {
 	Icon(

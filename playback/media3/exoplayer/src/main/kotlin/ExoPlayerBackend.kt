@@ -338,13 +338,8 @@ class ExoPlayerBackend(
 			preparedItemIndex = exoPlayer.mediaItemCount - 1
 		}
 
-		// Seek to prepared media item
-		when (preparedItemIndex) {
-			exoPlayer.currentMediaItemIndex - 1 -> exoPlayer.seekToPreviousMediaItem()
-			exoPlayer.currentMediaItemIndex + 1 -> exoPlayer.seekToNextMediaItem()
-			exoPlayer.currentMediaItemIndex -> Unit
-			else -> exoPlayer.seekTo(preparedItemIndex, 0)
-		}
+		// Apply the launch position to this item after preparation, not to the previous playlist.
+		selectPreparedMediaItem(exoPlayer, preparedItemIndex, item.consumeInitialPosition())
 
 		// Update audio attributes
 		val contentType = when (item.mediaType) {

@@ -88,7 +88,6 @@ import org.jellyfin.sdk.model.api.MediaStream;
 import org.jellyfin.sdk.model.api.MediaType;
 import org.jellyfin.sdk.model.api.PersonKind;
 import org.jellyfin.sdk.model.api.SeriesTimerInfoDto;
-import org.jellyfin.sdk.model.api.UserDto;
 import org.jellyfin.sdk.model.serializer.UUIDSerializerKt;
 import org.koin.java.KoinJavaComponent;
 
@@ -137,6 +136,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
     private Runnable mClockLoop;
 
     BaseItemDto mBaseItem;
+    private ThemeMusicController themeMusic;
 
     private ArrayList<MediaSourceInfo> versions;
     private final Lazy<org.jellyfin.sdk.api.client.ApiClient> api = inject(org.jellyfin.sdk.api.client.ApiClient.class);
@@ -157,6 +157,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         FragmentFullDetailsBinding binding = FragmentFullDetailsBinding.inflate(getLayoutInflater(), container, false);
+        themeMusic = new ThemeMusicController(this);
 
         BUTTON_SIZE = Utils.convertDpToPixel(requireContext(), 40);
 
@@ -488,6 +489,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) return;
 
         mBaseItem = item;
+        if (themeMusic != null) themeMusic.select(item);
         backgroundService.getValue().setBackground(item);
         if (mBaseItem != null) {
             if (mChannelId != null) {
@@ -588,7 +590,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
 
                 break;
             case SERIES:
-                ItemRowAdapter nextUpAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createSeriesGetNextUpRequest(mBaseItem.getId()), false, new CardPresenter(true, 130), adapter);
+                ItemRowAdapter nextUpAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createSeriesGetNextUpRequest(mBaseItem.getId()), false, detailEpisodePresenter(130), adapter);
                 addItemRow(adapter, nextUpAdapter, 0, getString(R.string.lbl_next_up));
 
                 ItemRowAdapter seasonsAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createSeasonsRequest(mBaseItem.getId()), new CardPresenter(), adapter);
@@ -599,7 +601,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                     addItemRow(adapter, new ItemRowAdapter(requireContext(), new GetSpecialsRequest(mBaseItem.getId()), new CardPresenter(), adapter), 3, getString(R.string.lbl_specials));
                 }
 
-                ItemRowAdapter upcomingAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createUpcomingEpisodesRequest(mBaseItem.getId()), new CardPresenter(), adapter);
+                ItemRowAdapter upcomingAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createUpcomingEpisodesRequest(mBaseItem.getId()), detailEpisodePresenter(150), adapter);
                 addItemRow(adapter, upcomingAdapter, 2, getString(R.string.lbl_upcoming));
 
                 if (mBaseItem.getPeople() != null && !mBaseItem.getPeople().isEmpty()) {
@@ -620,7 +622,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
 
                 if (mBaseItem.getSeasonId() != null && mBaseItem.getIndexNumber() != null) {
                     // query index is zero-based but episode no is not
-                    ItemRowAdapter nextAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createNextEpisodesRequest(mBaseItem.getSeasonId(), mBaseItem.getIndexNumber()), 0, false, true, new CardPresenter(true, 120), adapter);
+                    ItemRowAdapter nextAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createNextEpisodesRequest(mBaseItem.getSeasonId(), mBaseItem.getIndexNumber()), 0, false, true, detailEpisodePresenter(120), adapter);
                     addItemRow(adapter, nextAdapter, 5, getString(R.string.lbl_next_episode));
                 }
 
@@ -736,29 +738,10 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         navigationRepository.getValue().navigate(Destinations.INSTANCE.itemDetails(mBaseItem.getSeriesId()));
     }
 
-    private void deleteItem() {
-        Timber.i("Showing item delete confirmation");
-        new AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.item_delete_confirm_title))
-                .setMessage(getString(R.string.item_delete_confirm_message))
-                .setNegativeButton(R.string.lbl_no, null)
-                .setPositiveButton(R.string.lbl_delete, (dialog, which) -> {
-                    FullDetailsFragmentHelperKt.deleteItem(
-                            this,
-                            api.getValue(),
-                            mBaseItem,
-                            dataRefreshService.getValue(),
-                            navigationRepository.getValue()
-                    );
-                })
-                .show();
-    }
-
     TextUnderButton favButton = null;
     TextUnderButton shuffleButton = null;
     TextUnderButton goToSeriesButton = null;
     TextUnderButton queueButton = null;
-    TextUnderButton deleteButton = null;
     TextUnderButton moreButton;
     TextUnderButton playButton = null;
     TextUnderButton trailerButton = null;
@@ -988,6 +971,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                 }
             });
 
+            mPrevButton.setVisibility(View.GONE);
             mDetailsOverviewRow.addAction(mPrevButton);
 
             //now go get our prev episode id
@@ -1000,22 +984,6 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                 }
             });
             mDetailsOverviewRow.addAction(goToSeriesButton);
-        }
-
-        boolean deletableItem = false;
-        UserDto currentUser = KoinJavaComponent.<UserRepository>get(UserRepository.class).getCurrentUser().getValue();
-        if (mBaseItem.getType() == BaseItemKind.RECORDING && currentUser.getPolicy().getEnableLiveTvManagement() && mBaseItem.getCanDelete() != null)
-            deletableItem = mBaseItem.getCanDelete();
-        else if (mBaseItem.getCanDelete() != null) deletableItem = mBaseItem.getCanDelete();
-
-        if (deletableItem) {
-            deleteButton = TextUnderButton.create(requireContext(), R.drawable.ic_delete, buttonSize, 0, getString(R.string.lbl_delete), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    deleteItem();
-                }
-            });
-            mDetailsOverviewRow.addAction(deleteButton);
         }
 
         if (mSeriesTimerInfo != null) {
@@ -1033,7 +1001,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                 @Override
                 public void onClick(View v) {
                     new AlertDialog.Builder(requireContext())
-                            .setTitle(R.string.lbl_delete)
+                            .setTitle(R.string.lbl_cancel_series)
                             .setMessage(getString(R.string.msg_cancel_entire_series))
                             .setPositiveButton(R.string.lbl_cancel_series, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -1068,8 +1036,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
 
         moreButton.setVisibility(View.GONE);
         mDetailsOverviewRow.addAction(moreButton);
-        if (mBaseItem.getType() != BaseItemKind.EPISODE)
-            showMoreButtonIfNeeded();  //Episodes check for previous and then call this above
+        showMoreButtonIfNeeded(); // Parent navigation is usable while previous-episode lookup runs.
     }
 
     private void handleResumeButtonAndFocus(BaseItemDto nextUpEpisode) {
@@ -1118,18 +1085,28 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         menu.show();
     }
 
+    private CardPresenter detailEpisodePresenter(int defaultHeight) {
+        return ModernDetailsStyle.isEnabled(mBaseItem.getType())
+            ? new CardPresenter(true, org.jellyfin.androidtv.constant.ImageType.THUMB, 100, true, true)
+            : new CardPresenter(true, defaultHeight);
+    }
+
     int collapsedOptions = 0;
 
     void showMoreButtonIfNeeded() {
         int visibleOptions = mDetailsOverviewRow.getVisibleActions();
 
         List<TextUnderButton> actionsList = new ArrayList<>();
+        // Keep parent navigation visible; only secondary controls may collapse.
         // added in order of priority (should match res/menu/menu_details_more.xml)
+        // Keep Trailer visible ahead of queue actions in the modern movie/TV layout.
+        boolean modern = ModernDetailsStyle.isEnabled(mBaseItem.getType());
+        if (modern && trailerButton != null) actionsList.add(trailerButton);
         if (queueButton != null) actionsList.add(queueButton);
-        if (trailerButton != null) actionsList.add(trailerButton);
+        if (!modern && trailerButton != null) actionsList.add(trailerButton);
         if (shuffleButton != null) actionsList.add(shuffleButton);
         if (favButton != null) actionsList.add(favButton);
-        if (goToSeriesButton != null) actionsList.add(goToSeriesButton);
+        if (mPrevButton != null && mPrevItemId != null) actionsList.add(mPrevButton);
 
         // reverse the list so the less important actions are hidden first
         Collections.reverse(actionsList);
@@ -1218,6 +1195,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
     }
 
     void play(final BaseItemDto item, final int pos, final boolean shuffle) {
+        stopThemeMusic();
         playbackHelper.getValue().getItemsToPlay(getContext(), item, pos == 0 && item.getType() == BaseItemKind.MOVIE, shuffle, new Response<List<BaseItemDto>>(getLifecycle()) {
             @Override
             public void onResponse(List<BaseItemDto> response) {
@@ -1234,8 +1212,20 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
     }
 
     void play(final List<BaseItemDto> items, final int pos, final boolean shuffle) {
+        stopThemeMusic();
         if (items.isEmpty()) return;
         if (shuffle) Collections.shuffle(items);
         KoinJavaComponent.<PlaybackLauncher>get(PlaybackLauncher.class).launch(getContext(), items, pos);
+    }
+
+    public void stopThemeMusic() {
+        if (themeMusic != null) themeMusic.stop();
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (themeMusic != null) themeMusic.dispose();
+        themeMusic = null;
+        super.onDestroyView();
     }
 }

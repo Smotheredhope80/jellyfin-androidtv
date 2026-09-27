@@ -2,6 +2,7 @@ package org.jellyfin.androidtv.ui.presentation
 
 import android.view.View
 import androidx.core.view.isVisible
+import androidx.leanback.widget.ItemAlignmentFacet
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.RowPresenter
@@ -11,6 +12,16 @@ open class CustomListRowPresenter @JvmOverloads constructor(
 ) : ListRowPresenter() {
 	init {
 		headerPresenter = CustomRowHeaderPresenter()
+		val facet = ItemAlignmentFacet().apply {
+			alignmentDefs = arrayOf(
+				ItemAlignmentFacet.ItemAlignmentDef().apply {
+					itemAlignmentViewId = View.NO_ID
+					itemAlignmentOffset = 0
+					itemAlignmentOffsetPercent = 0f
+				}
+			)
+		}
+		setFacet(ItemAlignmentFacet::class.java, facet)
 	}
 
 	override fun isUsingDefaultShadow() = false

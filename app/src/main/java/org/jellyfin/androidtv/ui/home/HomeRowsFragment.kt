@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import androidx.leanback.app.RowsSupportFragment
+import androidx.leanback.widget.BaseGridView
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.OnItemViewSelectedListener
 import androidx.leanback.widget.Presenter
 import androidx.leanback.widget.Row
 import androidx.leanback.widget.RowPresenter
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -35,6 +37,9 @@ import org.jellyfin.androidtv.data.repository.NotificationsRepository
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.preference.UserSettingPreferences
+import org.jellyfin.androidtv.preference.UserPreferences
+import org.jellyfin.androidtv.preference.constant.AppTheme
+import org.jellyfin.androidtv.constant.ImageType
 import org.jellyfin.androidtv.ui.GridButton
 import org.jellyfin.androidtv.ui.browsing.CompositeClickedListener
 import org.jellyfin.androidtv.ui.browsing.CompositeSelectedListener
@@ -67,14 +72,20 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 	private val notificationsRepository by inject<NotificationsRepository>()
 	private val userRepository by inject<UserRepository>()
 	private val userSettingPreferences by inject<UserSettingPreferences>()
+	private val userPreferences by inject<UserPreferences>()
 	private val userViewsRepository by inject<UserViewsRepository>()
 	private val dataRefreshService by inject<DataRefreshService>()
 	private val customMessageRepository by inject<CustomMessageRepository>()
 	private val navigationRepository by inject<NavigationRepository>()
 	private val itemLauncher by inject<ItemLauncher>()
 	private val keyProcessor by inject<KeyProcessor>()
+	private val previewViewModel: HomePreviewViewModel by viewModels(
+		ownerProducer = { requireParentFragment() },
+	)
 
-	private val helper by lazy { HomeFragmentHelper(requireContext(), userRepository) }
+	private val helper by lazy {
+		HomeFragmentHelper(requireContext(), userRepository, userPreferences[UserPreferences.appTheme] == AppTheme.ELEGANT_FIN)
+	}
 
 	// Data
 	private var currentItem: BaseRowItem? = null
@@ -84,6 +95,19 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 	// Special rows
 	private val notificationsRow by lazy { NotificationsHomeFragmentRow(lifecycleScope, notificationsRepository) }
 	private val nowPlaying by lazy { HomeFragmentNowPlayingRow(lifecycleScope, playbackManager, mediaManager) }
+
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+
+		if (userPreferences[UserPreferences.appTheme] == AppTheme.ELEGANT_FIN) {
+			verticalGridView?.windowAlignment = BaseGridView.WINDOW_ALIGN_LOW_EDGE
+			verticalGridView?.windowAlignmentOffset = 0
+			verticalGridView?.windowAlignmentOffsetPercent = BaseGridView.WINDOW_ALIGN_OFFSET_PERCENT_DISABLED
+			verticalGridView?.itemAlignmentViewId = View.NO_ID
+			verticalGridView?.itemAlignmentOffset = 0
+			verticalGridView?.itemAlignmentOffsetPercent = BaseGridView.WINDOW_ALIGN_OFFSET_PERCENT_DISABLED
+		}
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -99,24 +123,24 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 			val homesections = userSettingPreferences.activeHomesections
 
 			// Make sure the rows are empty
-			val rows = mutableListOf<HomeFragmentRow>()
+			val rows = mutableListOf<Pair<HomeSectionType, HomeFragmentRow>>()
 
 			// Check for coroutine cancellation
 			if (!isActive) return@launch
 
 			// Actually add the sections
 			for (section in homesections) when (section) {
-				HomeSectionType.LATEST_MEDIA -> rows.add(helper.loadRecentlyAdded(userViewsRepository.views.first()))
-				HomeSectionType.LIBRARY_TILES_SMALL -> rows.add(HomeFragmentViewsRow(small = false))
-				HomeSectionType.LIBRARY_BUTTONS -> rows.add(HomeFragmentViewsRow(small = true))
-				HomeSectionType.RESUME -> rows.add(helper.loadResumeVideo())
-				HomeSectionType.RESUME_AUDIO -> rows.add(helper.loadResumeAudio())
+				HomeSectionType.LATEST_MEDIA -> rows.add(section to helper.loadRecentlyAdded(userViewsRepository.views.first()))
+				HomeSectionType.LIBRARY_TILES_SMALL -> rows.add(section to HomeFragmentViewsRow(small = false))
+				HomeSectionType.LIBRARY_BUTTONS -> rows.add(section to HomeFragmentViewsRow(small = true))
+				HomeSectionType.RESUME -> rows.add(section to helper.loadResumeVideo())
+				HomeSectionType.RESUME_AUDIO -> rows.add(section to helper.loadResumeAudio())
 				HomeSectionType.RESUME_BOOK -> Unit // Books are not (yet) supported
-				HomeSectionType.ACTIVE_RECORDINGS -> rows.add(helper.loadLatestLiveTvRecordings())
-				HomeSectionType.NEXT_UP -> rows.add(helper.loadNextUp())
+				HomeSectionType.ACTIVE_RECORDINGS -> rows.add(section to helper.loadLatestLiveTvRecordings())
+				HomeSectionType.NEXT_UP -> rows.add(section to helper.loadNextUp())
 				HomeSectionType.LIVE_TV -> if (currentUser.policy?.enableLiveTvAccess == true) {
-					rows.add(HomeFragmentLiveTVRow(requireActivity(), userRepository))
-					rows.add(helper.loadOnNow())
+					rows.add(section to HomeFragmentLiveTVRow(requireActivity(), userRepository))
+					rows.add(section to helper.loadOnNow())
 				}
 
 				HomeSectionType.NONE -> Unit
@@ -124,12 +148,28 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 
 			// Add sections to layout
 			withContext(Dispatchers.Main) {
-				val cardPresenter = CardPresenter()
+				val isElegantFin = userPreferences[UserPreferences.appTheme] == AppTheme.ELEGANT_FIN
+				val posterPresenter = if (isElegantFin) {
+					CardPresenter(true, ImageType.POSTER, 150, modernHome = true)
+				} else CardPresenter()
+
+				val thumbPresenter = if (isElegantFin) {
+					CardPresenter(true, ImageType.THUMB, 130, modernHome = true)
+				} else CardPresenter()
 
 				// Add rows in order
-				notificationsRow.addToRowsAdapter(requireContext(), cardPresenter, adapter as MutableObjectAdapter<Row>)
-				nowPlaying.addToRowsAdapter(requireContext(), cardPresenter, adapter as MutableObjectAdapter<Row>)
-				for (row in rows) row.addToRowsAdapter(requireContext(), cardPresenter, adapter as MutableObjectAdapter<Row>)
+				notificationsRow.addToRowsAdapter(requireContext(), posterPresenter, adapter as MutableObjectAdapter<Row>)
+				nowPlaying.addToRowsAdapter(requireContext(), posterPresenter, adapter as MutableObjectAdapter<Row>)
+				for ((section, row) in rows) {
+					val presenter = when (section) {
+						HomeSectionType.RESUME,
+						HomeSectionType.NEXT_UP,
+						HomeSectionType.ACTIVE_RECORDINGS,
+						HomeSectionType.LIVE_TV -> thumbPresenter
+						else -> posterPresenter
+					}
+					row.addToRowsAdapter(requireContext(), presenter, adapter as MutableObjectAdapter<Row>)
+				}
 
 				// Wire up Live TV sibling rows so the On Now row removes the buttons row when empty
 				@Suppress("UNCHECKED_CAST")
@@ -270,6 +310,8 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 			rowViewHolder: RowPresenter.ViewHolder?,
 			row: Row?,
 		) {
+			previewViewModel.select((item as? BaseRowItem)?.baseItem)
+
 			if (item !is BaseRowItem) {
 				currentItem = null
 				//fill in default background

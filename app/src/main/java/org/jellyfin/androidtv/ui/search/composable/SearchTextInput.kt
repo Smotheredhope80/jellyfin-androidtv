@@ -1,6 +1,11 @@
 package org.jellyfin.androidtv.ui.search.composable
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import org.jellyfin.androidtv.ui.base.Text
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Row
@@ -35,11 +40,14 @@ fun SearchTextInput(
 	onQueryChange: (query: String) -> Unit,
 	onQuerySubmit: () -> Unit,
 	modifier: Modifier = Modifier,
+	modern: Boolean = false,
 ) {
 	val interactionSource = remember { MutableInteractionSource() }
 	val focused by interactionSource.collectIsFocusedAsState()
 
 	val color = when {
+		modern && focused -> Color.White to Color(0xFF0F172A)
+		modern -> Color(0xFF1E293B) to Color.White
 		focused -> JellyfinTheme.colorScheme.inputFocused to JellyfinTheme.colorScheme.onInputFocused
 		else -> JellyfinTheme.colorScheme.input to JellyfinTheme.colorScheme.onInput
 	}
@@ -67,17 +75,21 @@ fun SearchTextInput(
 				showKeyboardOnFocus = true,
 			),
 			textStyle = LocalTextStyle.current,
-			cursorBrush = SolidColor(color.first),
+			cursorBrush = SolidColor(if (modern) color.second else color.first),
 			decorationBox = { innerTextField ->
 				Row(
 					verticalAlignment = Alignment.CenterVertically,
 					modifier = Modifier
-						.border(2.dp, color.first, RoundedCornerShape(percent = 30))
+						.then(if (modern) Modifier.background(color.first, RoundedCornerShape(12.dp)) else Modifier)
+						.border(2.dp, if (modern) Color(0xFFA78BFA) else color.first, if (modern) RoundedCornerShape(12.dp) else RoundedCornerShape(percent = 30))
 						.padding(12.dp)
 				) {
 					Icon(ImageVector.vectorResource(R.drawable.ic_search), contentDescription = null)
 					Spacer(Modifier.width(12.dp))
-					innerTextField()
+					Box {
+						if (modern && query.isEmpty()) Text(stringResource(R.string.lbl_search_hint), color = color.second.copy(alpha = 0.7f))
+						innerTextField()
+					}
 				}
 			}
 		)

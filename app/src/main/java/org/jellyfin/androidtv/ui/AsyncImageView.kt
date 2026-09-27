@@ -43,6 +43,7 @@ class AsyncImageView @JvmOverloads constructor(
 	private val styledAttributes = context.obtainStyledAttributes(attrs, R.styleable.AsyncImageView, defStyleAttr, 0)
 	private val imageLoader by inject<ImageLoader>()
 	private var loadJob: Job? = null
+	private var loadGeneration = 0L
 
 	/**
 	 * The duration of the crossfade when changing switching the images of the url, blurhash and
@@ -67,46 +68,64 @@ class AsyncImageView @JvmOverloads constructor(
 		placeholder: Drawable? = null,
 		aspectRatio: Double = 1.0,
 		blurHashResolution: Int = 32,
-	) = doOnAttach {
-		// Cancel the previous load if still running
-		loadJob?.cancel()
+	) = loadWithResult(url, blurHash, placeholder, aspectRatio, blurHashResolution)
 
-		loadJob = lifeCycleOwner?.lifecycleScope?.launch(Dispatchers.IO) {
-			var placeholderOrBlurHash = placeholder
+	/** Result callback for layouts that retain text until artwork has actually loaded. */
+	fun loadWithResult(
+		url: String? = null,
+		blurHash: String? = null,
+		placeholder: Drawable? = null,
+		aspectRatio: Double = 1.0,
+		blurHashResolution: Int = 32,
+		onResult: ((Boolean) -> Unit)? = null,
+	) {
+		val generation = ++loadGeneration
+		doOnAttach {
+			if (generation != loadGeneration) return@doOnAttach
+			// Cancel the previous load if still running
+			loadJob?.cancel()
 
-			// Only show blurhash if an image is going to be loaded from the network
-			val isLowRamDevice = context.getSystemService<ActivityManager>()?.isLowRamDevice == true
-			if (url != null && blurHash != null && !isLowRamDevice && aspectRatio > 0) withContext(Dispatchers.IO) {
-				val blurHashBitmap = BlurHashDecoder.decode(
-					blurHash,
-					if (aspectRatio > 1) round(blurHashResolution * aspectRatio).toInt() else blurHashResolution,
-					if (aspectRatio >= 1) blurHashResolution else round(blurHashResolution / aspectRatio).toInt(),
-				)
-				if (blurHashBitmap != null) placeholderOrBlurHash = blurHashBitmap.toDrawable(resources)
+			loadJob = lifeCycleOwner?.lifecycleScope?.launch(Dispatchers.IO) {
+				var placeholderOrBlurHash = placeholder
+
+				// Only show blurhash if an image is going to be loaded from the network
+				val isLowRamDevice = context.getSystemService<ActivityManager>()?.isLowRamDevice == true
+				if (url != null && blurHash != null && !isLowRamDevice && aspectRatio > 0) withContext(Dispatchers.IO) {
+					val blurHashBitmap = BlurHashDecoder.decode(
+						blurHash,
+						if (aspectRatio > 1) round(blurHashResolution * aspectRatio).toInt() else blurHashResolution,
+						if (aspectRatio >= 1) blurHashResolution else round(blurHashResolution / aspectRatio).toInt(),
+					)
+					if (blurHashBitmap != null) placeholderOrBlurHash = blurHashBitmap.toDrawable(resources)
+				}
+
+				// Start loading image or placeholder
+				val request = if (url == null) {
+					ImageRequest.Builder(context).apply {
+						target(this@AsyncImageView)
+						data(placeholder)
+						if (circleCrop) transformations(CircleCropTransformation())
+					}.build()
+				} else {
+					ImageRequest.Builder(context).apply {
+						val crossFadeDurationMs = crossFadeDuration.inWholeMilliseconds.toInt()
+						if (crossFadeDurationMs > 0) crossfade(crossFadeDurationMs)
+						else crossfade(false)
+
+						target(this@AsyncImageView)
+						data(url)
+						listener(
+							onSuccess = { _, _ -> post { if (generation == loadGeneration) onResult?.invoke(true) } },
+							onError = { _, _ -> post { if (generation == loadGeneration) onResult?.invoke(false) } },
+						)
+						placeholder(placeholderOrBlurHash?.asImage())
+						if (circleCrop) transformations(CircleCropTransformation())
+						error(placeholder?.asImage())
+					}.build()
+				}
+
+				imageLoader.enqueue(request).job.await()
 			}
-
-			// Start loading image or placeholder
-			val request = if (url == null) {
-				ImageRequest.Builder(context).apply {
-					target(this@AsyncImageView)
-					data(placeholder)
-					if (circleCrop) transformations(CircleCropTransformation())
-				}.build()
-			} else {
-				ImageRequest.Builder(context).apply {
-					val crossFadeDurationMs = crossFadeDuration.inWholeMilliseconds.toInt()
-					if (crossFadeDurationMs > 0) crossfade(crossFadeDurationMs)
-					else crossfade(false)
-
-					target(this@AsyncImageView)
-					data(url)
-					placeholder(placeholderOrBlurHash?.asImage())
-					if (circleCrop) transformations(CircleCropTransformation())
-					error(placeholder?.asImage())
-				}.build()
-			}
-
-			imageLoader.enqueue(request).job.await()
 		}
 	}
 }

@@ -5,8 +5,15 @@ import android.text.SpannableStringBuilder
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import androidx.core.text.bold
 import org.jellyfin.androidtv.databinding.ViewCardMediaInfoBinding
+import org.jellyfin.androidtv.preference.UserPreferences
+import org.jellyfin.androidtv.preference.constant.AppTheme
+import org.jellyfin.androidtv.util.dp
+import org.koin.java.KoinJavaComponent
 import org.jellyfin.sdk.model.api.MediaStream
 import org.jellyfin.sdk.model.api.MediaStreamType
 import java.text.NumberFormat
@@ -18,6 +25,23 @@ class MediaInfoCardView @JvmOverloads constructor(
 	defStyleRes: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr, defStyleRes) {
 	private val binding = ViewCardMediaInfoBinding.inflate(LayoutInflater.from(getContext()), this, true)
+
+	init {
+		val preferences = KoinJavaComponent.get<UserPreferences>(UserPreferences::class.java)
+		if (preferences[UserPreferences.appTheme] == AppTheme.ELEGANT_FIN) {
+			binding.root.isDuplicateParentStateEnabled = true
+			binding.root.background = StateListDrawable().apply {
+				addState(intArrayOf(android.R.attr.state_focused), GradientDrawable().apply {
+					setColor(Color.TRANSPARENT)
+					cornerRadius = 8.dp(context).toFloat()
+					setStroke(2.dp(context), Color.rgb(139, 213, 255))
+				})
+				addState(intArrayOf(), GradientDrawable().apply { setColor(Color.TRANSPARENT) })
+			}
+			binding.title.setTextColor(Color.WHITE)
+			binding.entries.setTextColor(Color.WHITE)
+		}
+	}
 
 	fun setMediaStream(mediaStream: MediaStream) {
 		binding.title.text = mediaStream.type.toString()
