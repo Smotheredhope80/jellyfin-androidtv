@@ -56,6 +56,7 @@ import org.jellyfin.androidtv.ui.itemhandling.BaseRowType
 import org.jellyfin.androidtv.ui.itemhandling.GridButtonBaseRowItem
 import org.jellyfin.androidtv.util.ImageHelper
 import org.jellyfin.androidtv.ui.home.homePlaybackProgress
+import org.jellyfin.androidtv.ui.home.homeEpisodeLabel
 import org.jellyfin.androidtv.ui.home.libraryArtwork
 import coil3.compose.rememberAsyncImagePainter
 import androidx.compose.ui.layout.ContentScale
@@ -329,31 +330,22 @@ private fun CardViewHolderContent(
 	}
 
 	val displayConfig = remember(item, imageType, uniformAspect, modernHome) { item?.getDisplayConfig(imageType, uniformAspect, modernHome) }
-	val isEpisodeThumb = modernHome && item?.baseItem?.type == BaseItemKind.EPISODE && (displayConfig?.aspectRatio ?: 1f) > 1f
-	val title = remember(item, context, isEpisodeThumb) {
-		if (isEpisodeThumb) {
+	val isHomeEpisode = modernHome && item?.baseItem?.type == BaseItemKind.EPISODE
+	val title = remember(item, context, isHomeEpisode) {
+		if (isHomeEpisode) {
 			item?.baseItem?.seriesName ?: item?.getCardName(context)
 		} else {
 			item?.getCardName(context)
 		}
 	}
 	val progress = if (modernHome) item?.baseItem?.homePlaybackProgress() else null
-	val subtitle = if (progress != null) {
+	val episodeLabel = remember(item, isHomeEpisode) { item?.baseItem?.takeIf { isHomeEpisode }?.homeEpisodeLabel() }
+	val subtitle = if (episodeLabel != null) {
+		episodeLabel
+	} else if (progress != null) {
 		stringResource(R.string.lbl_playback_control_remaining, TimeUtils.formatMillis(progress.remainingMillis))
-	} else remember(item, context, isEpisodeThumb) {
-		if (isEpisodeThumb) {
-			val b = item?.baseItem
-			val s = b?.parentIndexNumber
-			val e = b?.indexNumber
-			val epName = b?.name
-			if (s != null && e != null) {
-				if (!epName.isNullOrBlank()) "S$s:E$e - $epName" else "S$s:E$e"
-			} else {
-				item?.getSubText(context)
-			}
-		} else {
-			item?.getSubText(context)
-		}
+	} else remember(item, context) {
+		item?.getSubText(context)
 	}
 	if (item == null || displayConfig == null) return
 

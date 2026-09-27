@@ -99,6 +99,12 @@ fun FullDetailsFragment.showDetailsMenu(
 	if (goToSeriesButton?.isVisible == false) {
 		item(getString(R.string.lbl_goto_series)) { gotoSeries() }
 	}
+	if (mPrevButton?.isVisible == false && mPrevItemId != null) {
+		item(getString(R.string.lbl_previous_episode)) { mPrevButton.performClick() }
+	}
+	if (deleteButton?.isVisible == false) {
+		item(getString(R.string.lbl_delete)) { deleteButton.performClick() }
+	}
 }.showIfNotEmpty()
 
 fun FullDetailsFragment.createFakeSeriesTimerBaseItemDto(timer: SeriesTimerInfoDto) = BaseItemDto(
@@ -207,21 +213,21 @@ fun FullDetailsFragment.getItem(id: UUID, callback: (item: BaseItemDto?) -> Unit
 
 fun FullDetailsFragment.populatePreviousButton() {
 	if (mBaseItem.type != BaseItemKind.EPISODE) return
+	val episodeId = mBaseItem.id
+	val seriesId = mBaseItem.seriesId ?: return
 
 	val api by inject<ApiClient>()
 
 	lifecycleScope.launch {
-		val siblings = withContext(Dispatchers.IO) {
-			api.tvShowsApi.getEpisodes(
-				seriesId = requireNotNull(mBaseItem.seriesId),
-				adjacentTo = mBaseItem.id,
-			).content
+		val previousItem = try {
+			withContext(Dispatchers.IO) {
+				api.tvShowsApi.getEpisodes(seriesId = seriesId, adjacentTo = episodeId).content
+			}.items.firstOrNull { it.id != episodeId }?.id
+		} catch (error: ApiClientException) {
+			Timber.w(error, "Could not load previous episode")
+			null
 		}
-
-		val previousItem = siblings.items
-			.filterNot { it.id == mBaseItem.id }
-			.firstOrNull()
-			?.id
+		if (view == null || mBaseItem.id != episodeId) return@launch
 
 		mPrevItemId = previousItem
 		mPrevButton.isVisible = previousItem != null

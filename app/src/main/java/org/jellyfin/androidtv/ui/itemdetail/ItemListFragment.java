@@ -423,6 +423,17 @@ public class ItemListFragment extends Fragment implements View.OnKeyListener {
             }
         }
 
+        // Keep parent navigation ahead of mix/favorite so it is easy to discover.
+        UUID artistId = ParentArtistKt.primaryArtistId(mBaseItem);
+        if (artistId != null) {
+            TextUnderButton artist = TextUnderButton.create(requireContext(), R.drawable.ic_user, buttonSize, 2, getString(R.string.lbl_open_artist), v ->
+                    navigationRepository.getValue().navigate(Destinations.INSTANCE.itemDetails(artistId)));
+            mButtonRow.addView(artist);
+            artist.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) mScrollView.smoothScrollTo(0, 0);
+            });
+        }
+
         if (mBaseItem.getType() == BaseItemKind.MUSIC_ALBUM) {
             TextUnderButton mix = TextUnderButton.create(requireContext(), R.drawable.ic_mix, buttonSize, 2, getString(R.string.lbl_instant_mix), new View.OnClickListener() {
                 @Override
@@ -453,19 +464,6 @@ public class ItemListFragment extends Fragment implements View.OnKeyListener {
         fav.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) mScrollView.smoothScrollTo(0, 0);
         });
-
-        if (mBaseItem.getAlbumArtists() != null && !mBaseItem.getAlbumArtists().isEmpty()) {
-            TextUnderButton artist = TextUnderButton.create(requireContext(), R.drawable.ic_user, buttonSize, 4, getString(R.string.lbl_open_artist), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    navigationRepository.getValue().navigate(Destinations.INSTANCE.itemDetails(mBaseItem.getAlbumArtists().get(0).getId()));
-                }
-            });
-            mButtonRow.addView(artist);
-            artist.setOnFocusChangeListener((v, hasFocus) -> {
-                if (hasFocus) mScrollView.smoothScrollTo(0, 0);
-            });
-        }
 
     }
 

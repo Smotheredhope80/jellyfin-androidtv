@@ -991,6 +991,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                 }
             });
 
+            mPrevButton.setVisibility(View.GONE);
             mDetailsOverviewRow.addAction(mPrevButton);
 
             //now go get our prev episode id
@@ -1071,8 +1072,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
 
         moreButton.setVisibility(View.GONE);
         mDetailsOverviewRow.addAction(moreButton);
-        if (mBaseItem.getType() != BaseItemKind.EPISODE)
-            showMoreButtonIfNeeded();  //Episodes check for previous and then call this above
+        showMoreButtonIfNeeded(); // Parent navigation is usable while previous-episode lookup runs.
     }
 
     private void handleResumeButtonAndFocus(BaseItemDto nextUpEpisode) {
@@ -1133,6 +1133,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         int visibleOptions = mDetailsOverviewRow.getVisibleActions();
 
         List<TextUnderButton> actionsList = new ArrayList<>();
+        // Keep parent navigation visible; only secondary controls may collapse.
         // added in order of priority (should match res/menu/menu_details_more.xml)
         // Keep Trailer visible ahead of queue actions in the modern movie/TV layout.
         boolean modern = ModernDetailsStyle.isEnabled(mBaseItem.getType());
@@ -1141,7 +1142,8 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         if (!modern && trailerButton != null) actionsList.add(trailerButton);
         if (shuffleButton != null) actionsList.add(shuffleButton);
         if (favButton != null) actionsList.add(favButton);
-        if (goToSeriesButton != null) actionsList.add(goToSeriesButton);
+        if (mPrevButton != null && mPrevItemId != null) actionsList.add(mPrevButton);
+        if (goToSeriesButton != null && deleteButton != null) actionsList.add(deleteButton);
 
         // reverse the list so the less important actions are hidden first
         Collections.reverse(actionsList);

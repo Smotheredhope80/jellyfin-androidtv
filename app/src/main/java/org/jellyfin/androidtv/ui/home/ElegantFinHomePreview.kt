@@ -108,7 +108,7 @@ fun ElegantFinHomePreview(item: BaseItemDto?, modifier: Modifier = Modifier, top
 					if (logoState is AsyncImagePainter.State.Success) {
 						Image(logoPainter, contentDescription = item?.name, contentScale = ContentScale.Fit,
 							alignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize())
-					} else {
+					} else if (logo == null || logoState is AsyncImagePainter.State.Error) {
 						Text(previewTitle, color = Color.White, fontSize = 22.sp,
 							fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
 					}
