@@ -1,3 +1,33 @@
+## Git preservation of accepted dev28 source — 27 September 2026
+
+The 16 reviewed app files (code, tests and seven category banners) were committed as `1978b0f5103fc045f1ef16bf53d5dc07d34a2d78` on `experiment/mobile-inspired-tv-v12` after their working bytes matched the dev28 source manifest. The installed APK remains the separately verified 0.0.0-dev.28 artifact (SHA256 `6E14A6165F0D5D4D6881B7BD95AFB73A54BDD5A4DF0AC39F3FCBA394AD44DA8E`); no rebuild or device action followed the commit. Source verification remains 45 passing app tests and the previously reviewed lint report. The independent `AGENTS.md` policy edit remains outside these commits. No upstream is configured for this branch and no push/integration has occurred. Earlier entries describing uncommitted source are dated pre-commit history.
+
+## Dev28 owner acceptance — 27 September 2026
+
+Gary reviewed the installed dev28 on his Shield and reported: **“Looks good. happy with this”**. Record this as owner acceptance of the delivered category artwork and UI changes. Installed artifact remains `0.0.0-dev.28` / code 28, SHA256 `6E14A6165F0D5D4D6881B7BD95AFB73A54BDD5A4DF0AC39F3FCBA394AD44DA8E`. No additional device changes were made for this acceptance update.
+
+The requested UI work and owner review are complete. This general acceptance does not supply individual U09 edge-case or playback regression results; those remain unrecorded. Cindy's Shield remains unchanged. Git changes remain checkpointed and uncommitted as previously documented; no release promotion or publication. Earlier next-action requests for Gary's initial review are superseded. Evidence: [acceptance record](../../apk-inspection/20260927-dev28-navigation/install-gary/acceptance/README.md).
+
+## Dev28 installed on Gary's Shield — 27 September 2026
+
+Authorized in chat and installed in place at 09:18 BST on Gary's Shield `192.168.68.69:5555` (SHIELD Android TV, Android 11). Preflight: launcher foreground, zero media sessions; installed dev27 hash matched the retained recovery APK. `adb install -r` succeeded. Device readback: `org.jellyfin.androidtv.debug`, `0.0.0-dev.28`, code 28; SHA256 `6E14A6165F0D5D4D6881B7BD95AFB73A54BDD5A4DF0AC39F3FCBA394AD44DA8E` exactly matches the retained candidate below. Existing signing identity retained. Official package also present before upgrade; no uninstall or data clear.
+
+Startup through exported StartupActivity succeeded; MainActivity foreground and screenshot confirmed populated home/library and new Collections banner. Initial direct MainActivity launch was rejected as non-exported; using the normal exported entry point resolved it. No playback started. Full U09 D-pad/Back, logo-transition, parent-navigation and playback acceptance NOT RUN; screenshot/startup are not physical acceptance. Cindy's Shield was not changed. V8.2 remains retained release; dev28 is installed experimental on Gary's Shield.
+
+Evidence: [installation record](../../apk-inspection/20260927-dev28-navigation/install-gary/README.md), version/hash/install/startup logs and home.png. Prior dev27 retained as documented below; no downgrade/restore exercised. Next: Gary checks episode labels, recent TV series navigation, recent music artist navigation and artwork on TV. [Pending installation overview](../../../Garro%20Homelab%20project/Knowledge/OVERVIEW-UPDATES/20260927-jellyfin-dev28-installed-gary.md).
+
+## Dev28 category artwork and navigation candidate — 27 September 2026
+
+Gary chose **A — Cinematic objects**. Seven generated originals now supply the category banners. Continue Watching episode cards retain series title plus season/episode and episode name; home preview title fallback waits until logo absence/failure; episode details keep **Go to series** visible; album details expose **Open artist** before secondary controls with valid artist-ID fallback. See [artwork/prompts](../../artwork/20260927-cinematic-categories/README.md).
+
+**Source/artifact verification:** offline dev28 app tests, lint and assembly passed; 45 tests, zero failures/errors/skips, including six new tests. Lint remains 81 errors, 321 warnings, 423 hints. Normalized baseline comparison found only an existing WebP recommendation pointing at a different banner; no new code findings. Signature verification passed with the established debug certificate. [Candidate evidence and recovery](../../apk-inspection/20260927-dev28-navigation/README.md) includes exact APK identity, logs, test XML, lint comparison and 16 hash-verified source files. Initial build/logging and test-fixture failures are recorded there.
+
+**Limits:** candidate NOT INSTALLED; physical D-pad/Back/lifecycle/playback, image crop and U09 checks NOT RUN. Dev27 is the last documented installed candidate (not queried today); V8.2 stays the retained release. Next: Gary selects the target for an attended dev28 install and U09 check. No server changes or publication.
+
+**Git disposition:** observed 2026-09-27 Europe/London, active checkout `J:/My Drive/Jellyfin apk/source`, branch `experiment/mobile-inspired-tv-v12`, base HEAD `9997386bf33a7225911f3d5459e38bab0c7d1385`; no upstream/ahead-behind available. Changes remain uncommitted with verified source checkpoint; Git disposition pending. Existing `AGENTS.md` policy edit is preserved separately; no refs, toolchains, signing files or ignored runtime material changed. Targeted documentation recovery: [before-files](../../backups/20260927-category-navigation/README.md). No NAS copy/restore acceptance claimed.
+
+[Task checkpoint](../../00_Project/ACTIVE-TASKS/20260927-category-navigation.md). [Pending overview proposal](../../../Garro%20Homelab%20project/Knowledge/OVERVIEW-UPDATES/20260927-jellyfin-dev28-category-navigation.md); submission is not application.
+
 ## Git cleanup completed — 23 September 2026
 
 The previously dirty `experiment/mobile-inspired-tv-v12` checkout is clean after two reviewed commits: source/tests/assets `30326ff9dc60ea9fbdc5170161a210a6bb035cd2`, followed by maintained guidance and evidence documents `f81a57ff1c91bdd9ddd8caa9c7beb18b2b482af0`. Git history verified with `git fsck --full --no-reflogs` exit 0 (unreachable dangling objects reported, no integrity failure). A post-commit all-ref bundle was verified and hash-manifested at `S:\Homelab-Projects\01_Jellyfin-APK\20260923-235500-git-cleanup-committed`; no restore or independent off-NAS copy was tested. This documentation-only status entry follows the build recorded below. No push or upstream integration occurred.
@@ -590,6 +620,7 @@ Inventoried root-level loose documents and same-named standalone Kotlin files ag
 **Required next steps:** (1) inventory/review and preserve all modified and untracked work in a recoverable checkpoint or reviewed WIP commit; (2) choose whether to update local `master` by fast-forward or bring the experiment forward on a new integration branch; (3) because the experiment diverges and is substantially behind upstream, plan a rebase/cherry-pick or other reviewed integration, resolving conflicts without discarding local changes; (4) run relevant build and automated checks after integration, and record results before any physical device qualification. Do not use a plain pull as the integration plan. No checkout, merge, rebase, commit, push, build, or device action was performed during this status/documentation task.
 
 Pending shared overview submission: [upstream synchronization plan](../../../Garro%20Homelab%20project/Knowledge/OVERVIEW-UPDATES/20260923-jellyfin-upstream-sync-plan.md); not assumed applied. Documentation before-copy and restore scope: [checkpoint README](../../backups/20260923-223526-upstream-sync-plan-docs/README.md).
+
 ## Git cleanup baseline — 23 September 2026
 
 Started the planned cleanup with a recoverable source checkpoint and review sequence: [Git cleanup plan](../../00_Project/GIT-CLEANUP-PLAN-20260923.md). The checkout remained on `experiment/mobile-inspired-tv-v12` at `5abaa15745afe5016f2ae12f88845794ffe5ff54`, with 39 modified tracked files and 30 untracked files. The NAS checkpoint at `S:\Homelab-Projects\01_Jellyfin-APK\20260923-225216-git-cleanup-baseline` contains a verified full-history bundle, tracked patch, exact-byte working-file copies, untracked files, status, and hash manifest. All 69 copied working files matched their source hashes. `git diff --check` and reverse patch applicability passed; a clean-checkout restore has not been tested. The full source remains dirty and unmodified by Git operations; no stage/commit/branch movement, build, APK/device, or server action occurred.
@@ -618,4 +649,3 @@ Next owner and action: Gary / next agent to plan top row folder artwork/behavior
 ```
 
 Documentation before-copy: `backups/20260926-125100-git-hygiene-merge/HANDOFF.md.before.txt`.
-

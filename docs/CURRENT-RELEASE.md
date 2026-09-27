@@ -1,3 +1,29 @@
+## Git preservation of accepted dev28 source — 27 September 2026
+
+The 16 reviewed app files (code, tests and seven category banners) were committed as `1978b0f5103fc045f1ef16bf53d5dc07d34a2d78` on `experiment/mobile-inspired-tv-v12` after their working bytes matched the dev28 source manifest. The installed APK remains the separately verified 0.0.0-dev.28 artifact (SHA256 `6E14A6165F0D5D4D6881B7BD95AFB73A54BDD5A4DF0AC39F3FCBA394AD44DA8E`); no rebuild or device action followed the commit. Source verification remains 45 passing app tests and the previously reviewed lint report. The independent `AGENTS.md` policy edit remains outside these commits. No upstream is configured for this branch and no push/integration has occurred. Earlier entries describing uncommitted source are dated pre-commit history.
+
+## Dev28 owner acceptance — 27 September 2026
+
+Gary reviewed the installed dev28 on his Shield and reported: **“Looks good. happy with this”**. Record this as owner acceptance of the delivered category artwork and UI changes. Installed artifact remains `0.0.0-dev.28` / code 28, SHA256 `6E14A6165F0D5D4D6881B7BD95AFB73A54BDD5A4DF0AC39F3FCBA394AD44DA8E`. No additional device changes were made for this acceptance update.
+
+The requested UI work and owner review are complete. This general acceptance does not supply individual U09 edge-case or playback regression results; those remain unrecorded. Cindy's Shield remains unchanged. Git changes remain checkpointed and uncommitted as previously documented; no release promotion or publication. Earlier next-action requests for Gary's initial review are superseded. Evidence: [acceptance record](../../apk-inspection/20260927-dev28-navigation/install-gary/acceptance/README.md).
+
+## Dev28 installed on Gary's Shield — 27 September 2026
+
+Authorized in chat and installed in place at 09:18 BST on Gary's Shield `192.168.68.69:5555` (SHIELD Android TV, Android 11). Preflight: launcher foreground, zero media sessions; installed dev27 hash matched the retained recovery APK. `adb install -r` succeeded. Device readback: `org.jellyfin.androidtv.debug`, `0.0.0-dev.28`, code 28; SHA256 `6E14A6165F0D5D4D6881B7BD95AFB73A54BDD5A4DF0AC39F3FCBA394AD44DA8E` exactly matches the retained candidate below. Existing signing identity retained. Official package also present before upgrade; no uninstall or data clear.
+
+Startup through exported StartupActivity succeeded; MainActivity foreground and screenshot confirmed populated home/library and new Collections banner. Initial direct MainActivity launch was rejected as non-exported; using the normal exported entry point resolved it. No playback started. Full U09 D-pad/Back, logo-transition, parent-navigation and playback acceptance NOT RUN; screenshot/startup are not physical acceptance. Cindy's Shield was not changed. V8.2 remains retained release; dev28 is installed experimental on Gary's Shield.
+
+Evidence: [installation record](../../apk-inspection/20260927-dev28-navigation/install-gary/README.md), version/hash/install/startup logs and home.png. Prior dev27 retained as documented below; no downgrade/restore exercised. Next: Gary checks episode labels, recent TV series navigation, recent music artist navigation and artwork on TV. [Pending installation overview](../../../Garro%20Homelab%20project/Knowledge/OVERVIEW-UPDATES/20260927-jellyfin-dev28-installed-gary.md).
+
+## Dev28 retained candidate — 27 September 2026 — NOT INSTALLED
+
+APK: `apk-inspection/20260927-dev28-navigation/jellyfin-androidtv-v0.0.0-dev.28-debug.apk` (64,292,804 bytes), SHA256 `6E14A6165F0D5D4D6881B7BD95AFB73A54BDD5A4DF0AC39F3FCBA394AD44DA8E`. Package `org.jellyfin.androidtv.debug`, version `0.0.0-dev.28`, code 28. apksigner exit 0, v1/v2 verified; certificate SHA256 `d2e58d83d659813ec0264c831535320d3f40659068017666be17d1a5077aeb13` matches the established identity. Verifier META-INF warnings retained in signature.txt.
+
+Source: branch `experiment/mobile-inspired-tv-v12`, HEAD `9997386bf33a7225911f3d5459e38bab0c7d1385` plus uncommitted changes in the candidate's `source-checkpoint/` and `source-manifest.csv` (16 exact files). Seven approved A banners, episode identity, logo loading and series/artist navigation changes. Offline retained JDK21/SDK36 build passed with 45 app tests, zero failures/errors/skips. Lint remains 81 errors, 321 warnings, 423 hints; only the existing ConvertToWebp recommendation changes banner location. [Evidence, command and limits](../../apk-inspection/20260927-dev28-navigation/README.md).
+
+Candidate only; physical U09/playback checks NOT RUN; no device or server changes. V8.2 remains retained release; dev27 remains last documented installed candidate, not queried today. Dev27 rollback artifact remains at `apk-inspection/20260915-dev27-music-text-episode-thumbs/jellyfin-androidtv-v0.0.0-dev.27-debug.apk`, SHA256 `CB87E715990C075A7F9953F7E0973ADBE1F2708B7F0805CDA61388C244D7C160`; verify actual target downgrade/data compatibility before rollback. Git disposition pending; exact local checkpoint retained, no NAS or restore claim.
+
 ## Git source baseline — 23 September 2026
 
 The accumulated dev27-era native source, tests and library artwork were committed as `30326ff9dc60ea9fbdc5170161a210a6bb035cd2` on `experiment/mobile-inspired-tv-v12`. A pre-commit offline Gradle run of app/backend unit tests, lint and debug assembly at `0.0.0-dev.27` succeeded. The assembled APK SHA-256 was `CB87E715990C075A7F9953F7E0973ADBE1F2708B7F0805CDA61388C244D7C160`, identical to the retained dev27 candidate. App test XML records 39 passing tests; backend XML records five passing tests with its task up to date. Lint reports 81 errors, 321 warnings and 423 hints; it is not clean and no dev27 finding-by-finding baseline comparison was completed. Build log and source recovery evidence are linked from `HANDOFF.md`.

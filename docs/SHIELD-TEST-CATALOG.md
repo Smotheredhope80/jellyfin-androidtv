@@ -258,6 +258,16 @@ Evidence: `HomeRowsFragment.kt`, `CardPresenter.kt`, `ElegantFinHomePreview.kt`,
 
 Expected: Uniform card aspect ratios across rows; zero vertical clipping or overlap between cards and hero preview.
 
+## U09 — Episode identity, logo loading and parent navigation (Dev28 candidate)
+
+Status: physical tests NOT RUN. Use an attended installation of the exact retained candidate.
+
+1. In Continue Watching, focus a partly watched episode. Confirm series title above `S3:E3 - Are We Not Men?` (or that episode's actual numbers/name); progress must not replace episode identity. Check specials (season zero), missing numbering and long titles. Verify movie remaining-time display is preserved.
+2. Scroll recently added TV selections with both cold and cached logos, including rapid direction changes. The reserved logo area should remain blank while a known logo loads, then show the correct logo; plain text should appear for a missing/failed logo. Check no stale previous logo, focus jump or changed header height.
+3. Open an episode from recently added TV. Reach Go to series directly using the D-pad with both resumable and untouched episodes, with/without a previous episode and with delete permission. Open the series and another season/episode; Back should return through the previous pages. Check the previous-episode overflow action when controls are crowded and delayed/failed previous-episode lookup.
+4. Open a recently added album. Reach Open artist before mix/favorite, enter the artist page and another album, then Back. Check album-artist precedence, regular-artist fallback when album-artist IDs are missing, and no invented destination when both metadata lists are absent. Confirm play, queue, shuffle and track focus remain usable.
+5. Check all seven selected cinematic category banners on-TV for crop, contrast, labels and focus readability. The app uses generated originals; approval of the choice board is not physical crop/brightness acceptance.
+
 ## U08 — Episode Scene Thumbnails, Web App Parity, and Music Row Clearance (Dev26 / Dev27)
 
 Evidence: `CardPresenter.kt`, `ElegantFinHomePreview.kt`, `HomeFragment.kt`.
