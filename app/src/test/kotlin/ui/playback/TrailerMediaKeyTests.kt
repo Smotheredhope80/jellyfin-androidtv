@@ -29,14 +29,17 @@ class TrailerMediaKeyTests : FunSpec({
 		) shouldBe "seekBy(10)"
 	}
 
-	test("navigation keys remain available to WebView and activity") {
+	test("remote D-pad gives direct transport controls") {
+		trailerPlaybackCommand(KeyEvent.KEYCODE_DPAD_LEFT) shouldBe "seekBy(-10)"
+		trailerPlaybackCommand(KeyEvent.KEYCODE_DPAD_RIGHT) shouldBe "seekBy(10)"
+		trailerPlaybackCommand(KeyEvent.KEYCODE_DPAD_CENTER) shouldBe "togglePlayback()"
+		trailerPlaybackCommand(KeyEvent.KEYCODE_ENTER) shouldBe "togglePlayback()"
+	}
+
+	test("vertical navigation and Back remain available to WebView and activity") {
 		listOf(
 			KeyEvent.KEYCODE_DPAD_UP,
 			KeyEvent.KEYCODE_DPAD_DOWN,
-			KeyEvent.KEYCODE_DPAD_LEFT,
-			KeyEvent.KEYCODE_DPAD_RIGHT,
-			KeyEvent.KEYCODE_DPAD_CENTER,
-			KeyEvent.KEYCODE_ENTER,
 			KeyEvent.KEYCODE_BACK,
 		).forEach { keyCode ->
 			trailerPlaybackCommand(keyCode) shouldBe null

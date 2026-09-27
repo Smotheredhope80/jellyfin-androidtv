@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.ViewGroup
@@ -52,6 +53,10 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 				setBackgroundColor(Color.BLACK)
 				isFocusable = true
 				isFocusableInTouchMode = true
+			// Keep WebView focus for YouTube's controls without Android's full-view highlight.
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					defaultFocusHighlightEnabled = false
+				}
 				webChromeClient = WebChromeClient()
 				webViewClient = object : WebViewClient() {
 					override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
@@ -150,6 +155,7 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 			<meta name="referrer" content="strict-origin-when-cross-origin">
 			<style>
 				html, body, #player { width:100%; height:100%; margin:0; padding:0; overflow:hidden; background:#000; }
+				#player iframe:focus { outline:none; }
 			</style>
 		</head>
 		<body>
@@ -219,5 +225,8 @@ internal fun trailerPlaybackCommand(keyCode: Int): String? =
 		KeyEvent.KEYCODE_MEDIA_PAUSE -> "pausePlayback()"
 		KeyEvent.KEYCODE_MEDIA_REWIND -> "seekBy(-10)"
 		KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> "seekBy(10)"
+		KeyEvent.KEYCODE_DPAD_LEFT -> "seekBy(-10)"
+		KeyEvent.KEYCODE_DPAD_RIGHT -> "seekBy(10)"
+		KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> "togglePlayback()"
 		else -> null
 	}

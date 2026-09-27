@@ -88,7 +88,6 @@ import org.jellyfin.sdk.model.api.MediaStream;
 import org.jellyfin.sdk.model.api.MediaType;
 import org.jellyfin.sdk.model.api.PersonKind;
 import org.jellyfin.sdk.model.api.SeriesTimerInfoDto;
-import org.jellyfin.sdk.model.api.UserDto;
 import org.jellyfin.sdk.model.serializer.UUIDSerializerKt;
 import org.koin.java.KoinJavaComponent;
 
@@ -739,29 +738,10 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         navigationRepository.getValue().navigate(Destinations.INSTANCE.itemDetails(mBaseItem.getSeriesId()));
     }
 
-    private void deleteItem() {
-        Timber.i("Showing item delete confirmation");
-        new AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.item_delete_confirm_title))
-                .setMessage(getString(R.string.item_delete_confirm_message))
-                .setNegativeButton(R.string.lbl_no, null)
-                .setPositiveButton(R.string.lbl_delete, (dialog, which) -> {
-                    FullDetailsFragmentHelperKt.deleteItem(
-                            this,
-                            api.getValue(),
-                            mBaseItem,
-                            dataRefreshService.getValue(),
-                            navigationRepository.getValue()
-                    );
-                })
-                .show();
-    }
-
     TextUnderButton favButton = null;
     TextUnderButton shuffleButton = null;
     TextUnderButton goToSeriesButton = null;
     TextUnderButton queueButton = null;
-    TextUnderButton deleteButton = null;
     TextUnderButton moreButton;
     TextUnderButton playButton = null;
     TextUnderButton trailerButton = null;
@@ -1006,22 +986,6 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
             mDetailsOverviewRow.addAction(goToSeriesButton);
         }
 
-        boolean deletableItem = false;
-        UserDto currentUser = KoinJavaComponent.<UserRepository>get(UserRepository.class).getCurrentUser().getValue();
-        if (mBaseItem.getType() == BaseItemKind.RECORDING && currentUser.getPolicy().getEnableLiveTvManagement() && mBaseItem.getCanDelete() != null)
-            deletableItem = mBaseItem.getCanDelete();
-        else if (mBaseItem.getCanDelete() != null) deletableItem = mBaseItem.getCanDelete();
-
-        if (deletableItem) {
-            deleteButton = TextUnderButton.create(requireContext(), R.drawable.ic_delete, buttonSize, 0, getString(R.string.lbl_delete), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    deleteItem();
-                }
-            });
-            mDetailsOverviewRow.addAction(deleteButton);
-        }
-
         if (mSeriesTimerInfo != null) {
             //Settings
             mDetailsOverviewRow.addAction(TextUnderButton.create(requireContext(), R.drawable.ic_settings, buttonSize, 0, getString(R.string.lbl_series_settings), new View.OnClickListener() {
@@ -1037,7 +1001,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                 @Override
                 public void onClick(View v) {
                     new AlertDialog.Builder(requireContext())
-                            .setTitle(R.string.lbl_delete)
+                            .setTitle(R.string.lbl_cancel_series)
                             .setMessage(getString(R.string.msg_cancel_entire_series))
                             .setPositiveButton(R.string.lbl_cancel_series, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -1143,7 +1107,6 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         if (shuffleButton != null) actionsList.add(shuffleButton);
         if (favButton != null) actionsList.add(favButton);
         if (mPrevButton != null && mPrevItemId != null) actionsList.add(mPrevButton);
-        if (goToSeriesButton != null && deleteButton != null) actionsList.add(deleteButton);
 
         // reverse the list so the less important actions are hidden first
         Collections.reverse(actionsList);
