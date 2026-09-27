@@ -268,6 +268,15 @@ Status: physical tests NOT RUN. Use an attended installation of the exact retain
 4. Open a recently added album. Reach Open artist before mix/favorite, enter the artist page and another album, then Back. Check album-artist precedence, regular-artist fallback when album-artist IDs are missing, and no invented destination when both metadata lists are absent. Confirm play, queue, shuffle and track focus remain usable.
 5. Check all seven selected cinematic category banners on-TV for crop, contrast, labels and focus readability. The app uses generated originals; approval of the choice board is not physical crop/brightness acceptance.
 
+## U10 — Media deletion removed and YouTube remote controls (Dev29/Dev30)
+
+Status: physical checks NOT RUN. Test on the exact installed APK; the static source check alone does not establish remote behavior.
+
+1. Open movie, episode, series and recording details for items with server delete permission. Check the visible actions and More menu: there must be no library **Delete** action. Verify Play, Go to series, Previous episode, Favorites and queue actions still work where applicable.
+2. For a scheduled Live TV series, confirm **Cancel series** remains a separate scheduling action with its own confirmation; do not confirm an actual cancellation during this check.
+3. Start a known playable YouTube trailer. On dev29, record the whole-window border and tab-like focus movement; Gary reports the latter remains. On dev30, press Left and Right once each to check ten-second seek and Center to pause/resume. Up/Down should still pass to YouTube's controls; note any native controls that cannot be reached. Check dedicated media play/pause/seek keys. Back should return to Jellyfin with focus restored and no continuing audio.
+4. Repeat with a trailer whose embed is denied to check the existing external fallback, and after a background/foreground cycle. Record any WebView/version-specific focus behavior. The Android focus-highlight setting applies on API 26 and later.
+
 ## U08 — Episode Scene Thumbnails, Web App Parity, and Music Row Clearance (Dev26 / Dev27)
 
 Evidence: `CardPresenter.kt`, `ElegantFinHomePreview.kt`, `HomeFragment.kt`.
