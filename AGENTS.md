@@ -52,6 +52,8 @@ Public distribution additionally needs explicit authorization, source/artifact c
 
 ## End-of-task documentation and maintaining this file
 
+For substantive or interruption-prone work, follow `J:\My Drive\Garro Homelab project\Knowledge\AGENT-TASK-CLOSEOUT-POLICY.md`. Save progress after meaningful units and before a long build or agent handoff. The canonical source handoff is `docs/HANDOFF.md`; read it back before reporting the task closed.
+
 After substantial work, update `docs/HANDOFF.md` with changes, verification, unresolved items and the concrete next task. Update `docs/CURRENT-RELEASE.md` whenever artifact identity, release designation, installed/tested evidence or rollback information changes. Extend `docs/SHIELD-TEST-CATALOG.md` when a repeatable test is established or corrected. Record relevant cross-project discoveries in the shared Knowledge area when available and within the task's scope; record a pending update if unavailable. Do not copy secrets or entire histories into these summaries.
 
 Review all four files for contradictions before finishing. Report what changed and what remains unknown. Do not rewrite `AGENTS.md` just to log completed work. Change it only when standing instructions, workflow, authoritative sources or development rules change; keep transient branch/version/test state in the supporting documents.

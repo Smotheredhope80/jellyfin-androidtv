@@ -1,3 +1,13 @@
+## V9.0 Gary's Shield owner observation — 27 September 2026
+
+For the installed V9.0/dev30 on Gary's Shield, Gary reports previously working behavior still worked in his checks, no visible Delete button, and no text showing behind logos. He will continue normal use and report issues. This is a physical owner observation for the paths tried, not a complete U09/U10, playback/HDR/audio, More-menu, fallback-trailer, or downgrade verification. APK identity and public release designation remain as recorded below; no new artifact or install was made. [Canonical handoff](HANDOFF.md).
+
+## Cindy Shield V9.0 installed — 27 September 2026
+
+Cindy's Shield at 192.168.68.85:5555 upgraded in place from dev27 to V9.0/dev30; installed version and SHA256 BE21C971886F73A75FD12B5C9C4D5FAE430DEABFE3F3AA7B4655DEBB2577EE5C verified. Launch succeeds but displays server setup; sign-in and general use confirmed by Gary; specific physical playback cases NOT RUN. No uninstall/data clear. Prior dev27 retained and hash-matched; downgrade untested. [Installation evidence](../../apk-inspection/20260927-cindy-v9-install/README.md), [task record](../../00_Project/ACTIVE-TASKS/20260927-cindy-v9-install.md), [pending overview proposal](../../../Garro%20Homelab%20project/Knowledge/OVERVIEW-UPDATES/20260927-jellyfin-cindy-v9-installed.md). Earlier connection-blocked status is superseded. Next: record individual playback and remote-control cases if further qualification is needed.
+
+Owner confirmation (2026-09-27 12:48 +01:00): Gary reports he signed in on Cindy's Shield and that it works like the other Shield. This confirms sign-in and general use by owner report; specific playback, trailer, remote-control and HDR/audio cases were not individually recorded. No new device command or APK change followed.
+
 ## Latest retained public prerelease: Shield Enhanced V9.0 — 27 September 2026
 
 Published at [GitHub release shield-enhanced-v9.0](https://github.com/Smotheredhope80/jellyfin-androidtv/releases/tag/shield-enhanced-v9.0) as an unofficial prerelease. APK [local release record](../../release/shield-enhanced-v9.0/README.md): `Jellyfin-AndroidTV-Shield-Enhanced-V9.0-debug.apk`, 64,276,430 bytes, SHA256 `BE21C971886F73A75FD12B5C9C4D5FAE430DEABFE3F3AA7B4655DEBB2577EE5C`; package `org.jellyfin.androidtv.debug`, version `0.0.0-dev.30`, code30; debug certificate SHA256 `d2e58d83d659813ec0264c831535320d3f40659068017666be17d1a5077aeb13`, apksigner v1/v2 pass. Bytes match dev30 retained candidate and installed Gary Shield APK. Anonymous public APK download returned HTTP 200, 64,276,430 bytes and the same SHA256. GitHub API readback: draft=false, prerelease=true, two assets (APK and SHA256SUMS.txt).
