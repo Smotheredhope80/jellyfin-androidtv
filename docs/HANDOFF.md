@@ -1,3 +1,20 @@
+## H: Project 01 source/worktree activation - 8 October 2026, 11:12 BST
+
+Gary designated each PC's local `H:\Garro Homelab project\Projects\01_Jellyfin-APK` as the new Project 01 documentation and explicit agent-work home. The H `source` and `publication-worktree-20260927` are proper linked worktrees in the H `.git-store`, reconstructed by Git without replacing the J source. Both PCs have the same 164 refs, 10,714 reachable commits, branch heads and local H instruction commit `4f97ee08d2d5f07b8feaeadf3541187628e6b48a`. Post-commit `git fsck --full --no-reflogs` returned 0 on both. No APK build, device test or runtime deployment was performed. The BEDROOM P01 Antigravity project has its H folder registered; GARRO Antigravity project identity/authentication remains an agent-runtime hold. The J/E originals remain intact; the J-root documentation Scheduled Task was disabled pending an H input/output and NAS-boundary review. See `H:\Garro Homelab project\00_Project\H-ACTIVATION-20261008.md`.
+
+Git workspace observation time: 2026-10-08 11:12 BST (both hosts; point-in-time).
+Repository/worktree: each host's `H:\Garro Homelab project\Projects\01_Jellyfin-APK\source`, linked to sibling `.git-store`; publication worktree retained.
+Branch or detached state and HEAD: `experiment/mobile-inspired-tv-v12` at `4f97ee08d2d5f07b8feaeadf3541187628e6b48a`; publication branch `release/shield-enhanced-v9.0-public` at `7ad5526981afc025935c25a3d77fab3a455227f6`.
+Upstream and ahead/behind: no upstream configured for the source branch; ahead/behind not applicable. Existing origin/fork remotes retained; no push destination invented.
+Tracked/untracked/relevant ignored state: clean tracked and untracked source worktree at observation; one relevant ignored `local.properties` retained, SHA256 `C1BB3973C7FE7B14E93682BCD0E67280770DD39FFD8C7CEDAD0B9A44604EEFF3`, matching the J source. The handoff edit is the next task-scoped Git checkpoint.
+Local commits, unpublished work, or attached review: local instruction commit `4f97ee08d`, unpublished; no attached review for this H checkout was established.
+Tests and qualification limits: exact ref/commit counts, worktree pointers, source/file SHA, post-commit `fsck` and Antigravity H folder registration on BEDROOM. No build/device test or live H-file agent read.
+Deployment/runtime/physical acceptance state: not run; existing E/J consumers remain separately owned and preserved.
+Disposition: active H source/worktree, not free for archive or retirement.
+Next owner and action: use the H checkout for new P01 source work; coordinate future branch writes across PCs, qualify an upstream/transfer route and separately test any runtime or scheduled consumer before switching it.
+
+---
+
 ## Project 01 documentation checkpoint cutover — 28 September 2026, 17:21 BST
 
 Project 01's active operational configuration is now `J:\My Drive\Jellyfin apk\00_Project\Operational-Config\jellyfin-documents-pilot.json`, SHA256 `9AA6FA6A088B3B6A690B6C8A8559E60F96F734960B30A28EE31A678EBD72A975`. It retains the prior settings and the 17 prior document names plus Project 01's five approved additions (22 names total). This is a credential-free, machine-specific config in the project workspace, outside public Git. The original `E:\Git\garro-homelab\config-templates\backup\jellyfin-documents-pilot.json` remains intact at SHA256 `757D0F487CB606AA2A60D85D1A3B3FC16174A90EF89B891B905205A2B2F896C9` as rollback/reference; **not safe to remove**. The earlier decision section below is dated pre-cutover history and is superseded on authority and installed task path by this section.
