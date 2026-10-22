@@ -121,11 +121,11 @@ Expected: local trailer uses native player; recognized YouTube opens full-screen
 
 ## T02 — Trailer media keys and lifecycle
 
-Evidence: dirty `EmbeddedTrailerActivity.kt` and `TrailerMediaKeyTests.kt`; retained three-test passing XML.
+Evidence: `EmbeddedTrailerActivity.kt`, `TrailerMediaKeyTests.kt` and retained dev30 build/test evidence. Wording reconciled on 22 October 2026 with the owner-selected dev30 mapping in U10; this is not a new physical test result.
 
-While a YouTube trailer plays, send PAUSE twice, PLAY twice, PLAY_PAUSE, rewind and fast-forward; repeat near beginning/end and hold a transport key. Navigate controls with D-pad/Center, then background/foreground and Back out.
+While a YouTube trailer plays, send dedicated media PAUSE twice, PLAY twice, PLAY_PAUSE, rewind and fast-forward; repeat near beginning/end and hold a transport key. Check D-pad Left/Right for ten-second seek and Center/Enter for play/pause, including held-key behavior. Use Up/Down to inspect reachable YouTube controls; explicitly record whether captions/settings can be reached and activated with this mapping. Then background/foreground and Back out.
 
-Expected: PAUSE stays paused, PLAY stays playing, toggle changes state, seeks use bounded ten-second steps, held-key repeats do not double-toggle, and D-pad/Center remain available to WebView controls. Background pauses playback, returning is usable, and teardown stops audio. Unit tests cover command mapping only, not physical WebView behavior.
+Expected: PAUSE stays paused, PLAY stays playing, toggle changes state, seeks use bounded ten-second steps, and held-key repeats do not double-toggle. Left/Right and Center/Enter are consumed by the activity for transport commands; they are not passed to focused WebView controls. Dedicated media keys also issue player commands through the activity. Up/Down and Back retain normal WebView/activity dispatch. Background pauses playback, returning is usable, and Back/teardown stop audio and restore usable Jellyfin focus. Standard YouTube controls and attribution remain visible; caption/settings access is an explicit physical verification item, not implied by the mapping. Unit tests cover command mapping only. Physical behavior, control reachability and lifecycle checks remain NOT RUN unless separately recorded for the exact APK.
 
 ## T03 — Embed denial and external fallback
 
