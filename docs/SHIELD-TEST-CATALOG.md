@@ -129,6 +129,14 @@ While a YouTube trailer plays, send dedicated media PAUSE twice, PLAY twice, PLA
 
 Expected: PAUSE stays paused, PLAY stays playing, toggle changes state, seeks use bounded ten-second steps, and held-key repeats do not double-toggle. Left/Right and Center/Enter are consumed by the activity for transport commands; they are not passed to focused WebView controls. Dedicated media keys also issue player commands through the activity. Up/Down and Back retain normal WebView/activity dispatch. Background pauses playback, returning is usable, and Back/teardown stop audio and restore usable Jellyfin focus. Standard YouTube controls and attribution remain visible; caption/settings access is an explicit physical verification item, not implied by the mapping. Unit tests cover command mapping only. Physical behavior, control reachability and lifecycle checks remain NOT RUN unless separately recorded for the exact APK.
 
+## T04 — Trailer captions toggle and focus containment (Dev31)
+
+Evidence: `EmbeddedTrailerActivity.kt` (`trailerConsumesKey`, `toggleCaptions()`), `TrailerMediaKeyTests.kt`. Status: physical checks NOT RUN.
+
+Play a YouTube trailer that has captions. Press Up: captions appear and a "Captions on" toast shows. Press Up again: captions disappear and "Captions off" shows. Press Down several times: nothing happens, and no focus box appears anywhere, including on hidden overlays. Repeat Left/Right seek, Center play/pause, and the media keys from T02. Try a trailer without captions and record the toast ("Captions unavailable", or "on" with nothing shown). If YouTube starts the trailer with captions already on, the first Up should turn them off. Finish with Back (returns to Jellyfin, sound stops) and Home (trailer pauses).
+
+Expected: captions toggle reliably, the iframe never takes focus, and T02 transport behavior is unchanged. The settings gear is intentionally unreachable. Unit tests cover key mapping only.
+
 ## T03 — Embed denial and external fallback
 
 Evidence: experiment document and EmbeddedTrailerActivity fallback implementation.

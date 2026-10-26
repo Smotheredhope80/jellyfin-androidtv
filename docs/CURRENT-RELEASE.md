@@ -1,3 +1,9 @@
+## Dev31 retained candidate — 26 October 2026 — NOT INSTALLED
+
+APK: `apk-inspection/20261026-dev31-trailer-captions/jellyfin-androidtv-v0.0.0-dev.31-debug.apk`, 64,294,175 bytes, SHA256 `1ADE2C11486DE6FA46AB4CD2AFC242C0C584FD163405071B21D38AC789464A8A`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.31` / code 31. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`. Source: commit `76c397527` on `experiment/mobile-inspired-tv-v12`, matching the build-input hashes in the candidate's `source-manifest.csv`.
+
+Change: trailer player consumes every D-pad key. Up toggles YouTube captions (undocumented captions-module calls, with a toast), Down does nothing, and seek/play-pause/media keys/Back are unchanged. 48 app tests pass with zero failures. Lint is 81 errors / 329 warnings / 423 hints; the only differences from dev30 are three "newer AGP available" warnings from online resolution. Physical checks NOT RUN. Installed build stays V9.0/dev30, which is the rollback APK. [Candidate record](../../apk-inspection/20261026-dev31-trailer-captions/README.md).
+
 ## V9.0 attended trailer remote run on Gary's Shield — 26 October 2026
 
 Installed identity re-verified read-only: `0.0.0-dev.30`/code30, device APK SHA256 `BE21C971886F73A75FD12B5C9C4D5FAE430DEABFE3F3AA7B4655DEBB2577EE5C` (unchanged V9.0). T02/U10 transport PASS by owner report; YouTube captions/settings NOT reachable with the dev30 mapping, and hidden iframe focus boxes (PARTIAL). Back, Home pause and U10 Delete removal PASS by owner report. No artifact, install or release-designation change. [T02 result](SHIELD-TEST-CATALOG.md#t02--trailer-media-keys-and-lifecycle).
