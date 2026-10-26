@@ -131,7 +131,7 @@ Expected: PAUSE stays paused, PLAY stays playing, toggle changes state, seeks us
 
 ## T04 — Trailer captions toggle and focus containment (Dev31)
 
-Evidence: `EmbeddedTrailerActivity.kt` (`trailerConsumesKey`, `toggleCaptions()`), `TrailerMediaKeyTests.kt`. Status: physical checks NOT RUN.
+Evidence: `EmbeddedTrailerActivity.kt` (`trailerConsumesKey`, `toggleCaptions()`), `TrailerMediaKeyTests.kt`. Status: **PASS (core), 26 Oct 2026, dev31 on Gary's Shield, owner-reported by Gary.** Up toggles captions with the toast; Down does nothing; no hidden focus boxes; seek, pause, Back and Home unchanged. Trailer without captions: Up shows a misleading "Captions on" toast with nothing displayed. This is a cosmetic issue with no functional harm. NOT RUN: the case where YouTube starts with captions already on.
 
 Play a YouTube trailer that has captions. Press Up: captions appear and a "Captions on" toast shows. Press Up again: captions disappear and "Captions off" shows. Press Down several times: nothing happens, and no focus box appears anywhere, including on hidden overlays. Repeat Left/Right seek, Center play/pause, and the media keys from T02. Try a trailer without captions and record the toast ("Captions unavailable", or "on" with nothing shown). If YouTube starts the trailer with captions already on, the first Up should turn them off. Finish with Back (returns to Jellyfin, sound stops) and Home (trailer pauses).
 

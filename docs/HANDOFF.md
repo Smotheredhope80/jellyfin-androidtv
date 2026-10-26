@@ -1,4 +1,8 @@
-## Current handoff — 26 October 2026: dev31 trailer captions candidate built
+## Current handoff — 26 October 2026: dev31 installed on Gary's Shield, T04 PASS
+
+Dev31 (`76c397527`, APK `1ADE2C11…464A8A`) was installed in place over dev30 on Gary's Shield `192.168.68.69` with hash readback. Gary reported T04 core PASS: Up toggles captions with the toast, Down does nothing, no hidden focus boxes, and seek, pause, Back and Home are unchanged. This closes the T02 caption-access gap. Cosmetic issue: on a trailer with no captions, Up shows "Captions on" with nothing displayed, because `loadModule` gives no immediate track feedback. A possible fix is to check the `tracklist` option after loading. NOT RUN: the captions-already-on case, T03 embed-denied fallback, and resuming after Home. Cindy's Shield is unchanged (dev30). Next: the Seerr discover/request feature. Write a clean-room design against the Seerr API (Jellyfin-user auth via `POST /api/v1/auth/jellyfin`; P06 owns the server at NAS :5055), then build a prototype branch.
+
+## Previous handoff — 26 October 2026: dev31 trailer captions candidate built
 
 Gary assigned the fix in chat: Up toggles captions, Down consumed, no hidden focus boxes. Commit `76c397527` changes three files: `EmbeddedTrailerActivity.kt` (new `trailerConsumesKey()`, JS `toggleCaptions()` and a toast), `strings.xml` (three English strings, no translations) and `TrailerMediaKeyTests.kt`. Dev31 APK SHA256 `1ADE2C11…464A8A` is retained with tests, lint, build log and source manifest. The BEDROOM offline Gradle cache had evicted pinned AARs, so the build ran online and refilled `toolchain/gradle-home`; future `--offline` builds on BEDROOM should work again. Not installed. Next: with Gary's approval, install dev31 on Gary's Shield over dev30 (same signer, higher code) and run T04.
 

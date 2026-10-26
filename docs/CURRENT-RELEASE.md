@@ -1,5 +1,7 @@
 ## Dev31 installed on Gary's Shield — 26 October 2026
 
+**T04 PASS (core), owner-reported by Gary on 26 Oct:** Up toggles captions with the toast, Down does nothing, no hidden focus boxes, and seek, pause, Back and Home still work. Dev31 is the last tested build on Gary's Shield. Known cosmetic issue: on a trailer with no captions, Up shows "Captions on" with nothing displayed. The captions-already-on case is NOT RUN. Cindy's Shield stays on V9.0/dev30.
+
 Gary authorized this in chat. Preflight on `192.168.68.69:5555` (SHIELD Android TV, Android 11): launcher in foreground, Jellyfin media session state 0, installed dev30 hash `BE21C971…77EE5C` matched the retained rollback. `adb install -r` succeeded at 21:33 device time. Readback: `0.0.0-dev.31`/code31, device APK SHA256 `1ADE2C11…464A8A`, matching the candidate below. No uninstall or data clear. Physical T04 is pending Gary's checks. Cindy's Shield unchanged (V9.0/dev30). Rollback is the V9.0/dev30 APK; downgrade requires `-d` and has not been tested. [Install log](../../apk-inspection/20261026-dev31-trailer-captions/install-gary.log).
 
 ## Dev31 retained candidate — 26 October 2026
