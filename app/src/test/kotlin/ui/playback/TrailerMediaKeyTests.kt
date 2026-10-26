@@ -36,13 +36,25 @@ class TrailerMediaKeyTests : FunSpec({
 		trailerPlaybackCommand(KeyEvent.KEYCODE_ENTER) shouldBe "togglePlayback()"
 	}
 
-	test("vertical navigation and Back remain available to WebView and activity") {
+	test("Up toggles captions") {
+		trailerPlaybackCommand(KeyEvent.KEYCODE_DPAD_UP) shouldBe "toggleCaptions()"
+	}
+
+	test("every D-pad key is consumed so focus never enters the YouTube iframe") {
 		listOf(
 			KeyEvent.KEYCODE_DPAD_UP,
 			KeyEvent.KEYCODE_DPAD_DOWN,
-			KeyEvent.KEYCODE_BACK,
+			KeyEvent.KEYCODE_DPAD_LEFT,
+			KeyEvent.KEYCODE_DPAD_RIGHT,
+			KeyEvent.KEYCODE_DPAD_CENTER,
 		).forEach { keyCode ->
-			trailerPlaybackCommand(keyCode) shouldBe null
+			trailerConsumesKey(keyCode) shouldBe true
 		}
+		trailerPlaybackCommand(KeyEvent.KEYCODE_DPAD_DOWN) shouldBe null
+	}
+
+	test("Back remains available to the activity") {
+		trailerPlaybackCommand(KeyEvent.KEYCODE_BACK) shouldBe null
+		trailerConsumesKey(KeyEvent.KEYCODE_BACK) shouldBe false
 	}
 })

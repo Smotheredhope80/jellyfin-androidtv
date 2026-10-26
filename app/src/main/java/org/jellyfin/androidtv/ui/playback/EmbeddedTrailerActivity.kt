@@ -27,6 +27,9 @@ import timber.log.Timber
  * The standard YouTube IFrame player is intentionally left visible and unmodified. This keeps
  * YouTube attribution, advertisements, captions and playback controls available. Videos that do
  * not permit embedding can still be opened with the normal external Android handler.
+ *
+ * Every D-pad key is handled by the activity: WebView spatial navigation inside the cross-origin
+ * player otherwise lands on hidden overlay elements and cannot activate captions or settings.
  */
 class EmbeddedTrailerActivity : FragmentActivity() {
 	private lateinit var webView: WebView
@@ -53,7 +56,7 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 				setBackgroundColor(Color.BLACK)
 				isFocusable = true
 				isFocusableInTouchMode = true
-			// Keep WebView focus for YouTube's controls without Android's full-view highlight.
+			// Keep WebView focus for media key delivery without Android's full-view highlight.
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 					defaultFocusHighlightEnabled = false
 				}
@@ -95,17 +98,31 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 			return super.dispatchKeyEvent(event)
 		}
 
-		val command = trailerPlaybackCommand(event.keyCode)
-			?: return super.dispatchKeyEvent(event)
+		if (!trailerConsumesKey(event.keyCode)) {
+			return super.dispatchKeyEvent(event)
+		}
 
+		val command = trailerPlaybackCommand(event.keyCode)
 		if (
+			command != null &&
 			event.action == KeyEvent.ACTION_DOWN &&
 			event.repeatCount == 0
 		) {
-			webView.evaluateJavascript(command, null)
+			webView.evaluateJavascript(command) { result ->
+				if (command == TOGGLE_CAPTIONS_COMMAND) showCaptionsResult(result)
+			}
 		}
 
 		return true
+	}
+
+	private fun showCaptionsResult(result: String?) {
+		val message = when (result?.trim('"')) {
+			"on" -> R.string.msg_trailer_captions_on
+			"off" -> R.string.msg_trailer_captions_off
+			else -> R.string.msg_trailer_captions_unavailable
+		}
+		Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 	}
 
 	override fun onResume() {
@@ -185,6 +202,22 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 						player.pauseVideo();
 					}
 				}
+				// The captions module calls are not part of the documented IFrame API.
+				function toggleCaptions() {
+					if (!player || !player.loadModule || !player.unloadModule) return 'unavailable';
+					let track = null;
+					try { track = player.getOption('captions', 'track'); } catch (e) {}
+					try {
+						if (track && track.languageCode) {
+							player.unloadModule('captions');
+							return 'off';
+						}
+						player.loadModule('captions');
+						return 'on';
+					} catch (e) {
+						return 'unavailable';
+					}
+				}
 				function seekBy(seconds) {
 					if (!player || !player.getCurrentTime || !player.seekTo) {
 						return;
@@ -218,8 +251,15 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 	}
 }
 
+private const val TOGGLE_CAPTIONS_COMMAND = "toggleCaptions()"
+
+/** D-pad Down is consumed without a command so focus never enters the YouTube iframe. */
+internal fun trailerConsumesKey(keyCode: Int): Boolean =
+	trailerPlaybackCommand(keyCode) != null || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+
 internal fun trailerPlaybackCommand(keyCode: Int): String? =
 	when (keyCode) {
+		KeyEvent.KEYCODE_DPAD_UP -> TOGGLE_CAPTIONS_COMMAND
 		KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> "togglePlayback()"
 		KeyEvent.KEYCODE_MEDIA_PLAY -> "playPlayback()"
 		KeyEvent.KEYCODE_MEDIA_PAUSE -> "pausePlayback()"
