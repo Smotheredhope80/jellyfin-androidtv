@@ -123,6 +123,8 @@ Expected: local trailer uses native player; recognized YouTube opens full-screen
 
 Evidence: `EmbeddedTrailerActivity.kt`, `TrailerMediaKeyTests.kt` and retained dev30 build/test evidence. Wording reconciled on 22 October 2026 with the owner-selected dev30 mapping in U10; this is not a new physical test result.
 
+**Attended run, 26 October 2026 — Gary's Shield `192.168.68.69:5555`, installed `0.0.0-dev.30`/code30, device APK SHA256 `BE21C971…77EE5C` (V9.0 match): PARTIAL.** Owner report: Left/Right ten-second seek, Center play/pause and the remote transport functions all worked as described. **Captions/settings: FAIL (not reachable).** Up/Down can highlight the YouTube settings gear, but Center only toggles play/pause and Left/Right (needed to move to the CC button) seek instead, so neither captions nor settings can be activated. This is a design limitation of the dev30 key mapping, not a crash. Background/foreground, Back/teardown audio stop and the U10 Delete-menu check were not itemized separately in the owner report; treat them as unconfirmed until stated.
+
 While a YouTube trailer plays, send dedicated media PAUSE twice, PLAY twice, PLAY_PAUSE, rewind and fast-forward; repeat near beginning/end and hold a transport key. Check D-pad Left/Right for ten-second seek and Center/Enter for play/pause, including held-key behavior. Use Up/Down to inspect reachable YouTube controls; explicitly record whether captions/settings can be reached and activated with this mapping. Then background/foreground and Back out.
 
 Expected: PAUSE stays paused, PLAY stays playing, toggle changes state, seeks use bounded ten-second steps, and held-key repeats do not double-toggle. Left/Right and Center/Enter are consumed by the activity for transport commands; they are not passed to focused WebView controls. Dedicated media keys also issue player commands through the activity. Up/Down and Back retain normal WebView/activity dispatch. Background pauses playback, returning is usable, and Back/teardown stop audio and restore usable Jellyfin focus. Standard YouTube controls and attribution remain visible; caption/settings access is an explicit physical verification item, not implied by the mapping. Unit tests cover command mapping only. Physical behavior, control reachability and lifecycle checks remain NOT RUN unless separately recorded for the exact APK.
@@ -270,7 +272,7 @@ Status: physical tests NOT RUN. Use an attended installation of the exact retain
 
 ## U10 — Media deletion removed and YouTube remote controls (Dev29/Dev30)
 
-Status: physical checks NOT RUN. Test on the exact installed APK; the static source check alone does not establish remote behavior.
+Status: step 3 PARTIAL on 26 October 2026 (dev30, Gary's Shield): seek/play-pause/media keys PASS by owner report; YouTube captions/settings not reachable (see T02). Steps 1, 2 and 4 not individually recorded. Test on the exact installed APK; the static source check alone does not establish remote behavior.
 
 1. Open movie, episode, series and recording details for items with server delete permission. Check the visible actions and More menu: there must be no library **Delete** action. Verify Play, Go to series, Previous episode, Favorites and queue actions still work where applicable.
 2. For a scheduled Live TV series, confirm **Cancel series** remains a separate scheduling action with its own confirmation; do not confirm an actual cancellation during this check.

@@ -1,4 +1,10 @@
-## Current handoff — 22 October 2026: private two-PC reconciliation
+## Current handoff — 26 October 2026: attended T02/U10 trailer remote run
+
+Gary ran the T02/U10 trailer checks on his Shield `192.168.68.69:5555`. Preflight (read-only ADB): installed `org.jellyfin.androidtv.debug` `0.0.0-dev.30`/code30, device APK SHA256 `be21c971…77ee5c`, which matches V9.0. Result **PARTIAL**: transport (Left/Right ten-second seek, Center play/pause, media keys) PASS by owner report. **YouTube captions/settings are not reachable**: the gear can be highlighted with Up/Down, but the activity consumes Center (play/pause) and Left/Right (seek), so the controls can't be activated. Home/Back lifecycle and the Delete-menu check were not itemized; they remain unconfirmed. No source, build, install or device change. Next: decide on a caption-access fix (for example, a dedicated key or a control-focus mode that passes Center/Left/Right to the WebView) before starting the Seerr discovery/request feature.
+
+---
+
+## Previous handoff — 22 October 2026: private two-PC reconciliation
 
 P01 reconciled the independent GARRO `cf11cac6e737a1df1592a3d3ba4f3fd6478e079e` and BEDROOM `6f17772d6888a99fc1c186f85ef9c9abfad4eb47` documentation tips from common parent `c30757dfa911ba1c3ddf60c74439c5d04847123e`. Both dated toolchain entries below are retained verbatim. Their differing host JDK/SDK/cache routes remain valid; the 12 October both-PC configuration result follows the 11 October GARRO setup chronologically.
 
