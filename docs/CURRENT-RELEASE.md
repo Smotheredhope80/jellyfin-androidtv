@@ -1,6 +1,6 @@
 ## V9.0 attended trailer remote run on Gary's Shield — 26 October 2026
 
-Installed identity re-verified read-only: `0.0.0-dev.30`/code30, device APK SHA256 `BE21C971886F73A75FD12B5C9C4D5FAE430DEABFE3F3AA7B4655DEBB2577EE5C` (unchanged V9.0). T02/U10 transport PASS by owner report; YouTube captions/settings NOT reachable with the dev30 mapping (PARTIAL). Lifecycle/Back and Delete-menu checks not itemized. No artifact, install or release-designation change. [T02 result](SHIELD-TEST-CATALOG.md#t02--trailer-media-keys-and-lifecycle).
+Installed identity re-verified read-only: `0.0.0-dev.30`/code30, device APK SHA256 `BE21C971886F73A75FD12B5C9C4D5FAE430DEABFE3F3AA7B4655DEBB2577EE5C` (unchanged V9.0). T02/U10 transport PASS by owner report; YouTube captions/settings NOT reachable with the dev30 mapping, and hidden iframe focus boxes (PARTIAL). Back, Home pause and U10 Delete removal PASS by owner report. No artifact, install or release-designation change. [T02 result](SHIELD-TEST-CATALOG.md#t02--trailer-media-keys-and-lifecycle).
 
 ## V9.0 Gary's Shield owner observation — 27 September 2026
 
