@@ -1,4 +1,8 @@
-## Dev31 retained candidate — 26 October 2026 — NOT INSTALLED
+## Dev31 installed on Gary's Shield — 26 October 2026
+
+Gary authorized this in chat. Preflight on `192.168.68.69:5555` (SHIELD Android TV, Android 11): launcher in foreground, Jellyfin media session state 0, installed dev30 hash `BE21C971…77EE5C` matched the retained rollback. `adb install -r` succeeded at 21:33 device time. Readback: `0.0.0-dev.31`/code31, device APK SHA256 `1ADE2C11…464A8A`, matching the candidate below. No uninstall or data clear. Physical T04 is pending Gary's checks. Cindy's Shield unchanged (V9.0/dev30). Rollback is the V9.0/dev30 APK; downgrade requires `-d` and has not been tested. [Install log](../../apk-inspection/20261026-dev31-trailer-captions/install-gary.log).
+
+## Dev31 retained candidate — 26 October 2026
 
 APK: `apk-inspection/20261026-dev31-trailer-captions/jellyfin-androidtv-v0.0.0-dev.31-debug.apk`, 64,294,175 bytes, SHA256 `1ADE2C11486DE6FA46AB4CD2AFC242C0C584FD163405071B21D38AC789464A8A`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.31` / code 31. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`. Source: commit `76c397527` on `experiment/mobile-inspired-tv-v12`, matching the build-input hashes in the candidate's `source-manifest.csv`.
 
