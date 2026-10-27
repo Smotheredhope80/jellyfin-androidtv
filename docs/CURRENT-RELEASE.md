@@ -1,13 +1,17 @@
+## Dev32 installed on Gary's Shield — 27 October 2026
+
+**Installed, T05 pending.** Gary authorized this in chat ("install dev32 revision 2 on my Shield (192.168.68.69) over dev31"). Preflight on `192.168.68.69:5555` (SHIELD Android TV): installed dev31 code 31, device hash `1ADE2C11…464A8A` matched the retained candidate, Jellyfin media session state 0. `adb install -r` succeeded at 06:30 device time. Readback: `0.0.0-dev.32`/code 32, device APK SHA256 `F89AE0F7…AA5D6332`, matching the candidate below. The in-place update was accepted, which means the signer still matches. No uninstall or data clear. Cindy's Shield unchanged (V9.0/dev30). Rollback is the dev31 APK; downgrade needs `-d` and is untested. [Install log](../../apk-inspection/20261027-dev32-seerr-discover-r2/install-gary-shield.log).
+
 ## Dev32 Seerr candidate (revision 2) — 27 October 2026
 
-**Latest experimental build. Not installed.**
+**Latest experimental build; installed on Gary's Shield (above).**
 
 - **APK:** `apk-inspection/20261027-dev32-seerr-discover-r2/jellyfin-androidtv-v0.0.0-dev.32-debug.apk`, 64,856,118 bytes, SHA256 `F89AE0F7291EEB9D298FC7E9A6952B35E2783EC6C12A549D5129042AAA5D6332`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.32` / code 32. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
 - **Source:** commit `e63e1d1df` (feature `0ab52fc88` plus review fixes) on `experiment/mobile-inspired-tv-v12`.
 - **Checks:** 71 tests pass. Lint 81/329/423 is identical to dev31. Independent review: ACCEPT WITH NOTES.
 - **Superseded:** revision 1 (`20261027-dev32-seerr-discover/`, SHA256 `644F7032…AD22BA`, also code 32) was rejected in review. Never install it.
 - **Install:** dev32 would install in place over dev31 (same signer, higher code). Rollback to dev31 needs `install -r -d`, which is untested.
-- **NOT RUN:** install and T05.
+- **NOT RUN:** T05.
 
 ## Dev31 installed on Gary's Shield — 26 October 2026
 

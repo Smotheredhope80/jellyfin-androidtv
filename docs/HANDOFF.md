@@ -1,4 +1,10 @@
-## Current handoff — 27 October 2026: dev32 Seerr phase 1 built and reviewed, not installed
+## Current handoff — 27 October 2026: dev32 installed on Gary's Shield, T05 pending
+
+Gary approved the install in chat. Dev32 r2 is installed over dev31 on `192.168.68.69:5555` with `adb install -r`. Readback: code 32, device APK hash `F89AE0F7…` matches the candidate. Preflight showed dev31 (`1ADE2C11…`) and no active playback. No data clear. Cindy's Shield unchanged. Details in `CURRENT-RELEASE.md`.
+
+**Next:** Gary runs T05 (`SHIELD-TEST-CATALOG.md`). Sign-in needs Gary to type his password on the TV. Rollback is dev31 with `install -r -d` (untested).
+
+## Previous handoff — 27 October 2026: dev32 Seerr phase 1 built and reviewed, not installed
 
 Gary assigned this in chat: implement phase 1 (Gary-only, hidden unless configured), then run tests, lint and the verifier review, but don't install.
 
