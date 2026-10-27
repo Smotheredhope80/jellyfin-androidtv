@@ -1,4 +1,26 @@
-## Current handoff — 27 October 2026: Seerr phase 2 design written, awaiting approval
+## Current handoff — 27 October 2026: dev33 Seerr phase 2 built and reviewed, not installed
+
+Gary approved the phase 2 design and asked for implementation, tests, lint and the Tier 3 review, with no install.
+
+**Candidate:** dev33 r2, `apk-inspection/20261027-dev33-seerr-phase2-r2/`.
+- APK SHA256 `95F6520D…8D13775C`, code 33, same debug signer.
+- Source commit `8f67dd9bd`, local only.
+
+**Checks:**
+- 105 tests, 0 failures.
+- Lint 81/329/423, identical to dev32.
+- `haiku-reviewer`, standing in for `garro-shield-verifier`:
+  - r1 got ACCEPT WITH NOTES (S1–S4 and one HOLD);
+  - all were fixed or resolved from Seerr source in r2;
+  - the r2 re-review is ACCEPT.
+
+**r1 status:** r1 (`3E2F7766…`) is superseded. Never install it.
+
+**Next:** with Gary's approval, install dev33 r2 on Gary's Shield over dev32 r2 and run T06 (`SHIELD-TEST-CATALOG.md`). Steps 4–7 need Gary's Seerr account to have Advanced Requests or admin; that is a Seerr setting owned by P06.
+
+**Not run:** install and every T06 physical check.
+
+## Previous handoff — 27 October 2026: Seerr phase 2 design written, awaiting approval
 
 Gary chose to port the SeerrTV-style features (option B), with implementation to follow his approval of the design. The design is in [`SEERR-PHASE2-DESIGN.md`](SEERR-PHASE2-DESIGN.md) and covers four features:
 

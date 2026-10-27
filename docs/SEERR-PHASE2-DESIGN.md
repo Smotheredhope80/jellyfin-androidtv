@@ -151,6 +151,17 @@ No change is needed to the manifest, network security config, preferences, backu
   7. As a non-advanced user, if one is available: Request behaves exactly as in dev32, with no panel.
   8. Regression: T05 discover, search and Open in Jellyfin still pass.
 
+## As implemented (dev33 r2, 27 Oct 2026)
+
+- Gary approved this design in chat ("Design approved. Implement Seerr phase 2 as dev33"). The code is in commits `83a3979fb` and `8f67dd9bd`.
+- **The server-defaults question is answered from source.** Seerr v3.5.1 `server/subscriber/MediaRequestSubscriber.ts` resolves an omitted profile, folder, language profile or tags from the chosen server's own defaults, including anime defaults. Sending only `serverId` is therefore correct.
+- `defaultServerId` is the non-4K server marked `isDefault`. Seerr has no other fallback, so when none is marked, `serverId` is always sent.
+- Anime tags default to an empty list when the server has none set, which matches Seerr.
+- **Review fix:** a request with options re-reads `/auth/me` live before sending. The 10-minute cache only decides whether the panel is shown.
+- If both the chosen server and the fallback fail to load, the panel shows the error and **Request with defaults**.
+- The overview is limited to 4 lines, so the info rows stay visible.
+- Box office uses a hand-written formatter, because minSdk is 23.
+
 ## Out of scope for phase 2
 
 Person and filmography pages, similar and recommended rows, issue reporting, request edit, cancel and approve, 4K, watchlist, Discover filters, and a home-screen row. These are candidates for phase 3. The captions toast fix (from dev31 T04) is a separate small task.

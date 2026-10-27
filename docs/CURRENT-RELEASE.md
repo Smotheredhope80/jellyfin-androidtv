@@ -1,3 +1,22 @@
+## Dev33 Seerr phase 2 candidate (revision 2) — 27 October 2026
+
+**Latest experimental build. NOT INSTALLED** (Gary: "Don't install yet"). Dev32 r2 stays the installed and last tested build on Gary's Shield, and Cindy's Shield stays on V9.0/dev30.
+
+- **APK:** `apk-inspection/20261027-dev33-seerr-phase2-r2/jellyfin-androidtv-v0.0.0-dev.33-debug.apk`, 64,814,703 bytes, SHA256 `95F6520D39050937E27A0C14FC5240EF37183483AD0E873FFCBD6E018D13775C`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.33` / code 33. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
+- **Source:** commit `8f67dd9bd` (feature `83a3979fb` plus review fixes) on `experiment/mobile-inspired-tv-v12`. Local only.
+- **Scope:** on the Seerr details page:
+  - a trailer button;
+  - an RT/IMDb/TMDB ratings line;
+  - info rows with box office and budget, certification, genres, crew and cast;
+  - a request options panel for server, quality profile, root folder, language profile and tags, offered only to advanced Seerr users ([design](SEERR-PHASE2-DESIGN.md)).
+- **Checks:**
+  - 105 tests pass.
+  - Lint 81/329/423 is identical to dev32.
+  - Independent review: ACCEPT. Revision 1 got ACCEPT WITH NOTES; its findings were fixed in revision 2.
+- **Superseded:** revision 1 (`20261027-dev33-seerr-phase2/`, SHA256 `3E2F7766…2B5DA5F1`, also code 33). Never install it.
+- **Install:** dev33 would install in place over dev32 (same signer, higher code). Rollback to dev32 r2 needs `install -r -d`, which is untested.
+- **T06:** NOT RUN.
+
 ## Dev32 installed on Gary's Shield — 27 October 2026
 
 **Installed; T05 PASS (owner summary).** After the checklist, Gary reported "It worked" on 27 Oct. Per-step results were not itemised. Dev32 r2 is now the last tested build on Gary's Shield. Gary authorized this in chat ("install dev32 revision 2 on my Shield (192.168.68.69) over dev31"). Preflight on `192.168.68.69:5555` (SHIELD Android TV): installed dev31 code 31, device hash `1ADE2C11…464A8A` matched the retained candidate, Jellyfin media session state 0. `adb install -r` succeeded at 06:30 device time. Readback: `0.0.0-dev.32`/code 32, device APK SHA256 `F89AE0F7…AA5D6332`, matching the candidate below. The in-place update was accepted, which means the signer still matches. No uninstall or data clear. Cindy's Shield unchanged (V9.0/dev30). Rollback is the dev31 APK; downgrade needs `-d` and is untested. [Install log](../../apk-inspection/20261027-dev32-seerr-discover-r2/install-gary-shield.log).

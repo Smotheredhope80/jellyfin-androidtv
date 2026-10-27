@@ -153,6 +153,40 @@ Evidence: `SEERR-DISCOVER-DESIGN.md`, `data/seerr/`, `ui/seerr/`, `SeerrMappingT
 
 Expected: no focus traps, the password is not shown or kept, and requests use Seerr's own defaults and approval. Test requests must be for titles Gary wants, or be deleted afterwards in Seerr by Gary. Unit tests cover parsing, mapping, request bodies, URL and cookie handling, and paging only.
 
+## T06 — Seerr details, trailer and request options (Dev33)
+
+Evidence: `SEERR-PHASE2-DESIGN.md`, `data/seerr/`, `ui/seerr/SeerrRequestOptions.kt`, `SeerrPhase2MappingTests.kt`, `SeerrRepositoryTests.kt`. Status: **NOT RUN** (dev33 built 27 Oct 2026, not installed).
+
+1. Open a released film in Discover. The page shows:
+   - a tagline;
+   - a ratings line, such as Rotten Tomatoes, Audience, IMDb and TMDB;
+   - one-line info rows: certification and genres, date and status, box office and budget, director and studios, cast.
+
+   Every line is readable on screen with focus on the buttons. The ratings may appear a moment after the page.
+2. Press **Trailer**. The embedded YouTube player opens and plays. Back returns to the Seerr details page with focus on a button. Nothing autoplayed before the button was pressed.
+3. Open a show. It has a content rating, first–last aired dates, the network, "Created by", and no IMDb score. If it has a trailer, run step 2 again.
+4. **Advanced user** (Gary, if his Seerr account has Advanced Requests or admin): on a wanted, unrequested title, press Request.
+   - The options panel opens with focus on the first row.
+   - It shows a server row (only when there is more than one server), quality profile, root folder with free space, and tags (only when the Arr has tags).
+   - Open each list. Defaults are marked "(default)", and Back closes a list, then the panel.
+5. Change the profile and tick a tag, then press Request. The toast appears. In Seerr's web UI, the request shows that profile and tag.
+6. On another wanted title, open the panel and press Request without changing anything. Seerr uses the server's default profile and folder.
+7. Optional, if more than one non-4K server exists: choose a non-default server and request. Seerr sends it to that server with that server's defaults.
+8. **Non-advanced user** (if available): Request sends the request immediately, exactly as in dev32, and no panel appears.
+9. Regression: repeat T05 steps 3–7. Discover rows, search, Open in Jellyfin, a plain request and Back all still work.
+
+Expected: no focus traps, and no autoplay. The options are only offered to advanced users. Test requests must be for titles Gary wants, or be deleted afterwards in Seerr by Gary.
+
+Unit tests cover:
+
+- the trailer pick;
+- certification and region fallback;
+- USD formatting;
+- anime defaults;
+- the permission bitmask;
+- the request body: unchanged options give exactly the dev32 body;
+- service parsing, ratings parsing and caching.
+
 ## T03 — Embed denial and external fallback
 
 Evidence: experiment document and EmbeddedTrailerActivity fallback implementation.
