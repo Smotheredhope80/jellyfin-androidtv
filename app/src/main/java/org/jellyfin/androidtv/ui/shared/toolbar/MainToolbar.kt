@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.auth.repository.SessionRepository
 import org.jellyfin.androidtv.auth.repository.UserRepository
+import org.jellyfin.androidtv.data.seerr.SeerrRepository
 import org.jellyfin.androidtv.ui.NowPlayingComposable
 import org.jellyfin.androidtv.ui.base.Icon
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
@@ -49,6 +50,7 @@ enum class MainToolbarActiveButton {
 	User,
 	Home,
 	Search,
+	Discover,
 
 	None,
 }
@@ -86,6 +88,8 @@ private fun MainToolbar(
 	val mediaManager = koinInject<MediaManager>()
 	val sessionRepository = koinInject<SessionRepository>()
 	val settingsViewModel = koinActivityViewModel<SettingsViewModel>()
+	val seerrRepository = koinInject<SeerrRepository>()
+	val seerrAvailable by seerrRepository.available.collectAsState(false)
 	val activity = LocalActivity.current
 	val activeButtonColors = ButtonDefaults.colors(
 		containerColor = JellyfinTheme.colorScheme.buttonActive,
@@ -158,6 +162,18 @@ private fun MainToolbar(
 						colors = if (activeButton == MainToolbarActiveButton.Search) activeButtonColors else ButtonDefaults.colors(),
 						content = { Text(stringResource(R.string.lbl_search)) }
 					)
+					// Only shown once Seerr is set up for the signed-in user
+					if (seerrAvailable) {
+						Button(
+							onClick = {
+								if (activeButton != MainToolbarActiveButton.Discover) {
+									navigationRepository.navigate(Destinations.seerrDiscover)
+								}
+							},
+							colors = if (activeButton == MainToolbarActiveButton.Discover) activeButtonColors else ButtonDefaults.colors(),
+							content = { Text(stringResource(R.string.lbl_seerr_discover)) }
+						)
+					}
 				}
 			}
 		},

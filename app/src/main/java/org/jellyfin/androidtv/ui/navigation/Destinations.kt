@@ -23,6 +23,10 @@ import org.jellyfin.androidtv.ui.playback.stillwatching.StillWatchingFragment
 import org.jellyfin.androidtv.ui.player.photo.PhotoPlayerFragment
 import org.jellyfin.androidtv.ui.player.video.VideoPlayerFragment
 import org.jellyfin.androidtv.ui.search.SearchFragment
+import org.jellyfin.androidtv.data.seerr.SeerrMediaType
+import org.jellyfin.androidtv.ui.seerr.SeerrDetailsFragment
+import org.jellyfin.androidtv.ui.seerr.SeerrDiscoverFragment
+import org.jellyfin.androidtv.ui.seerr.SeerrSetupFragment
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.SeriesTimerInfoDto
@@ -35,6 +39,14 @@ object Destinations {
 	val home = fragmentDestination<HomeFragment>()
 	fun search(query: String? = null) = fragmentDestination<SearchFragment>(
 		SearchFragment.EXTRA_QUERY to query,
+	)
+
+	// Seerr
+	val seerrSetup = fragmentDestination<SeerrSetupFragment>()
+	val seerrDiscover = fragmentDestination<SeerrDiscoverFragment>()
+	fun seerrDetails(type: SeerrMediaType, tmdbId: Int) = fragmentDestination<SeerrDetailsFragment>(
+		SeerrDetailsFragment.EXTRA_TYPE to type.name,
+		SeerrDetailsFragment.EXTRA_TMDB_ID to tmdbId,
 	)
 
 	// Browsing

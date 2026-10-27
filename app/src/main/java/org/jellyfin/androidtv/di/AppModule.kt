@@ -27,7 +27,12 @@ import org.jellyfin.androidtv.data.repository.NotificationsRepository
 import org.jellyfin.androidtv.data.repository.NotificationsRepositoryImpl
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.androidtv.data.repository.UserViewsRepositoryImpl
+import org.jellyfin.androidtv.data.seerr.SeerrClient
+import org.jellyfin.androidtv.data.seerr.SeerrMediaType
+import org.jellyfin.androidtv.data.seerr.SeerrRepository
 import org.jellyfin.androidtv.data.service.BackgroundService
+import org.jellyfin.androidtv.ui.seerr.SeerrDetailsViewModel
+import org.jellyfin.androidtv.ui.seerr.SeerrDiscoverViewModel
 import org.jellyfin.androidtv.integration.dream.DreamViewModel
 import org.jellyfin.androidtv.ui.InteractionTrackerViewModel
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
@@ -142,6 +147,8 @@ val appModule = module {
 	single<SearchRepository> { SearchRepositoryImpl(get()) }
 	single<MediaSegmentRepository> { MediaSegmentRepositoryImpl(get(), get()) }
 	single<ExternalAppRepository> { ExternalAppRepository(get()) }
+	single { SeerrClient() }
+	single { SeerrRepository(get(), get(), get()) }
 
 	viewModel { StartupViewModel(get(), get(), get(), get()) }
 	viewModel { UserLoginViewModel(get(), get(), get(), get(defaultDeviceInfo)) }
@@ -152,6 +159,8 @@ val appModule = module {
 	viewModel { SearchViewModel(get()) }
 	viewModel { DreamViewModel(get(), get(), get(), get(), get()) }
 	viewModel { SettingsViewModel() }
+	viewModel { SeerrDiscoverViewModel(get()) }
+	viewModel { (type: SeerrMediaType, tmdbId: Int) -> SeerrDetailsViewModel(get(), type, tmdbId) }
 
 	single { BackgroundService(get(), get(), get(), get(), get()) }
 

@@ -46,7 +46,7 @@ Rules for option A:
 
 - The password is never stored or logged. It lives only in the sign-in dialog's state until the request returns.
 - Only the `connect.sid` cookie and the Seerr base URL are stored, in app-private preferences keyed to the current Jellyfin user. Sign out calls `POST /auth/logout` and deletes the cookie.
-- Any 401/403 clears the cookie and offers "Sign in to Seerr again". Silent retries are not allowed.
+- Seerr answers both an ended session and a missing permission with 401/403, so the app re-checks `/auth/me` before acting. The cookie is cleared, and the user offered "Sign in to Seerr" again, only if `/auth/me` also rejects. A permission error is shown as the server's message. There are no silent retries.
 - Backup: `backup_content.xml` and `backup_rules.xml` back up only an allow-list of files (checked 26 Oct). The cookie therefore goes in its own SharedPreferences file (`seerr_session`), which is not on that list and so is never backed up. The Seerr URL can sit in the normal user preferences. Keep the session file off the allow-list.
 
 ## User experience (D-pad first)
@@ -85,6 +85,18 @@ LAN cleartext to `192.168.68.73:5055` is already allowed: `network_security_conf
 - **New physical case T05** (to add to `SHIELD-TEST-CATALOG.md` with the dev32 candidate): sign in, browse rows, D-pad focus with no traps, search, open an available title in Jellyfin, request one movie and one TV season, see the request in Seerr's web UI, sign out, and a bad-password error.
 - **Test hygiene:** test requests go to something Gary actually wants, or are deleted afterwards in Seerr by Gary.
 - **Tier 3 review:** this adds networking and stored session credentials, so `garro-shield-verifier` reviews the dev32 source and artifact before install.
+
+## Phase 1 as implemented (dev32, 27 Oct 2026)
+
+- Code is in `data/seerr/` (models, pure mapping, OkHttp client, repository), `preference/SeerrPreferences.kt` and `ui/seerr/` (setup, Discover, details). There are small hooks in `MainToolbar`, `SettingsMainScreen`, `Destinations` and the Koin modules.
+- The work is committed on `experiment/mobile-inspired-tv-v12`, like dev31, because the project rules forbid branch switching in this checkout.
+- **Settings → Seerr requests** closes Settings and opens a full-screen sign-in page, since TV text entry doesn't fit the settings drawer. The Discover toolbar button appears only while a session exists for the signed-in Jellyfin user.
+- **Spec gaps.** The public OpenAPI file doesn't describe `MediaInfo.jellyfinMediaId`, `MediaInfo.seasons`, `MediaRequest.type` or `MediaRequest.seasons`. They are read as optional:
+  - If the Jellyfin id is missing, "Open in Jellyfin" is hidden.
+  - If season status is missing, seasons fall back to request membership, or show as requestable.
+  - T05 confirms the real behaviour.
+- **My requests** fetches up to 10 recent requests, then each title's details, because request entries carry no title.
+- **Upcoming films** uses `/discover/movies?primaryReleaseDateGte=<today>&sortBy=popularity.desc`.
 
 ## Open questions for Gary
 
