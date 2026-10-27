@@ -1,4 +1,32 @@
-## Current handoff — 26 October 2026: Seerr discover/request design written
+## Current handoff — 27 October 2026: dev32 Seerr phase 1 built and reviewed, not installed
+
+Gary assigned this in chat: implement phase 1 (Gary-only, hidden unless configured), then run tests, lint and the verifier review, but don't install.
+
+**What was built**
+- Commits `0ab52fc88` (feature) and `e63e1d1df` (review fixes).
+- New code:
+  - `data/seerr/`: models, pure mapping, OkHttp client, repository with session handling;
+  - `preference/SeerrPreferences.kt`: the `seerr_session` file, outside the backup lists, with no password;
+  - `ui/seerr/`: setup, Discover, details.
+- Hooks in `MainToolbar` (the Discover button shows only for the Jellyfin user with a session), `SettingsDeveloperScreen` (the entry point), `Destinations`, the Koin modules and `strings.xml`.
+
+**Review**
+- Revision 1 (`0ab52fc88`) was narrowly rejected: its main-Settings row was visible to every user.
+- Revision 2 moved the entry to Developer, rethrows cancellation, and adds 7 repository tests. It got ACCEPT WITH NOTES.
+- The review used `haiku-reviewer`, because `garro-shield-verifier`'s tools frontmatter can't start in Claude Code.
+
+**Candidate**
+- `apk-inspection/20261027-dev32-seerr-discover-r2/`, SHA256 `F89AE0F7…AA5D6332`, code 32.
+- 71 tests pass. Lint is identical to dev31.
+
+**Notes and gaps**
+- Spec gaps (`jellyfinMediaId`, season status) are optional and unverified live.
+- A scheme-less address defaults to `http://`.
+- Back from details returns focus to the first Trending card.
+
+**Next:** with Gary's approval, install dev32 revision 2 on Gary's Shield over dev31 and run T05. Live sign-in needs Gary to type his password on the TV.
+
+## Previous handoff — 26 October 2026: Seerr discover/request design written
 
 Gary chose to leave the no-captions toast for now and start Seerr. [`SEERR-DISCOVER-DESIGN.md`](SEERR-DISCOVER-DESIGN.md) is a clean-room design (JellyWatch source not opened). Read-only probes found Seerr `3.5.1` on NAS `:5055` with Jellyfin login on, 4K off and partial season requests on.
 

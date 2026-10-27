@@ -72,7 +72,7 @@ Not in phase 1: request cancel/edit, 4K, admin approval, quota display, a home-s
 | Models | `data/seerr/model/*.kt` | Only the fields used: ids, title/name, dates, poster/backdrop paths, `mediaInfo.status`, `mediaInfo.jellyfinMediaId`, seasons, request status. |
 | Repository | `data/seerr/SeerrRepository.kt` | Maps raw status numbers to a Kotlin enum (media 1–6, request 1–3). Koin singleton. |
 | Preferences | `preference/SeerrPreferences.kt` | Base URL, cookie, Seerr user id. Per Jellyfin user. |
-| Settings | `ui/settings/screen/seerr/` | Server URL, sign in/out, connection test (`/status`). Linked from `SettingsMainScreen`. |
+| Settings | `ui/seerr/SeerrSetupFragment.kt` | Server URL, sign in/out. Linked from Settings → Developer (see "as implemented"). |
 | Screens | `ui/seerr/` | Compose Discover and details screens, using the existing card and focus components. New destinations in `Destinations.kt`. |
 | Images | Seerr's poster paths are TMDB-relative | Phase 1 loads from TMDB's public image CDN through coil, at poster `w342` and backdrop `w1280`. If Seerr's image cache proxy proves usable on 3.5.1, switch to it so the TV fetches only from the LAN. |
 
@@ -88,9 +88,12 @@ LAN cleartext to `192.168.68.73:5055` is already allowed: `network_security_conf
 
 ## Phase 1 as implemented (dev32, 27 Oct 2026)
 
-- Code is in `data/seerr/` (models, pure mapping, OkHttp client, repository), `preference/SeerrPreferences.kt` and `ui/seerr/` (setup, Discover, details). There are small hooks in `MainToolbar`, `SettingsMainScreen`, `Destinations` and the Koin modules.
+- Code is in `data/seerr/` (models, pure mapping, OkHttp client, repository), `preference/SeerrPreferences.kt` and `ui/seerr/` (setup, Discover, details). There are small hooks in `MainToolbar`, `SettingsDeveloperScreen`, `Destinations` and the Koin modules.
 - The work is committed on `experiment/mobile-inspired-tv-v12`, like dev31, because the project rules forbid branch switching in this checkout.
-- **Settings → Seerr requests** closes Settings and opens a full-screen sign-in page, since TV text entry doesn't fit the settings drawer. The Discover toolbar button appears only while a session exists for the signed-in Jellyfin user.
+- **Settings → Developer → Seerr requests** closes Settings and opens a full-screen sign-in page, since TV text entry doesn't fit the settings drawer.
+  - Revision 2 moved the entry here from the main Settings screen after review. A row there would have been visible to every user, and the entry can't be hidden until configured because it is the only way to configure.
+  - The main Settings source is unchanged from before Seerr.
+  - No connection-test button was built. The Discover toolbar button appears only while a session exists for the signed-in Jellyfin user.
 - **Spec gaps.** The public OpenAPI file doesn't describe `MediaInfo.jellyfinMediaId`, `MediaInfo.seasons`, `MediaRequest.type` or `MediaRequest.seasons`. They are read as optional:
   - If the Jellyfin id is missing, "Open in Jellyfin" is hidden.
   - If season status is missing, seasons fall back to request membership, or show as requestable.

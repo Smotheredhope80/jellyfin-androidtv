@@ -142,13 +142,13 @@ Expected: captions toggle reliably, the iframe never takes focus, and T02 transp
 Evidence: `SEERR-DISCOVER-DESIGN.md`, `data/seerr/`, `ui/seerr/`, `SeerrMappingTests.kt`. Status: physical checks NOT RUN.
 
 1. Before sign-in, confirm that no Discover button shows in the toolbar.
-2. Settings → Seerr requests → enter the Seerr address, Jellyfin username and password, then sign in. Use a wrong password once and check that the error shows and the password field clears.
+2. Settings → Developer → Seerr requests → enter the Seerr address, Jellyfin username and password, then sign in. Use a wrong password once and check that the error shows and the password field clears.
 3. After sign-in, Discover appears and opens with focus on the first Trending card, with no keyboard. Check D-pad movement across all rows, then Up to the search field and the toolbar. Scroll a row far enough to trigger the next page.
 4. Search for a title and check the results row.
 5. Open an available title: the badge and "Open in Jellyfin" are shown, and the button opens the Jellyfin details page. If the button is missing, record that the server didn't return the Jellyfin id.
 6. Request one wanted movie, and one or more seasons of a wanted show. Check the toast, the badge refresh, My requests, and the request in Seerr's web UI.
 7. Back returns through details → Discover → previous screen.
-8. Sign out from Settings → Seerr requests: the Discover button disappears.
+8. Sign out from Settings → Developer → Seerr requests: the Discover button disappears. Also check that the main Settings menu shows no Seerr entry.
 9. Switch to another Jellyfin user: Discover stays hidden.
 
 Expected: no focus traps, the password is not shown or kept, and requests use Seerr's own defaults and approval. Test requests must be for titles Gary wants, or be deleted afterwards in Seerr by Gary. Unit tests cover parsing, mapping, request bodies, URL and cookie handling, and paging only.
