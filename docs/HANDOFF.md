@@ -1,4 +1,23 @@
-## Current handoff — 27 October 2026: dev32 T05 PASS on Gary's Shield
+## Current handoff — 27 October 2026: Seerr phase 2 design written, awaiting approval
+
+Gary chose to port the SeerrTV-style features (option B), with implementation to follow his approval of the design. The design is in [`SEERR-PHASE2-DESIGN.md`](SEERR-PHASE2-DESIGN.md) and covers four features:
+
+- a trailer button that reuses `EmbeddedTrailerActivity`;
+- an RT/IMDb/TMDB ratings line;
+- an info section with box office, budget, certification, genres, crew and cast;
+- an advanced request options panel for server, quality profile, root folder and tags.
+
+**Sources.** API facts come from Seerr's `v3.5.1` server source and OpenAPI file. A read-only probe confirmed the server is still on 3.5.1 with 4K off. SeerrTV is MIT-licensed; its code was not opened.
+
+**Key finding.** Seerr does not itself reject advanced fields from non-advanced users. The client therefore shows the panel and sends the extra fields only when `/auth/me` reports a permission of ADMIN, MANAGE_REQUESTS or REQUEST_ADVANCED.
+
+No code, build, device or server change was made.
+
+**Next:**
+- Gary approves the design or asks for changes, and answers its three open questions: whether his account has advanced requests, whether USD box office is OK, and whether to pull in any out-of-scope items.
+- After approval: implement dev33, run unit tests and lint, get a Tier 3 `garro-shield-verifier` review, then physical case T06.
+
+## Previous handoff — 27 October 2026: dev32 T05 PASS on Gary's Shield
 
 Gary ran T05 and reported "It worked". This is recorded as a PASS from the owner's summary. Step results were not itemised, so the step 5 "Open in Jellyfin" button (which uses data outside Seerr's published API) and the step 9 check with a second user are not separately confirmed. Dev32 r2 is the last tested build on Gary's Shield. Cindy's Shield stays on V9.0/dev30.
 

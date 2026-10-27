@@ -101,6 +101,10 @@ LAN cleartext to `192.168.68.73:5055` is already allowed: `network_security_conf
 - **My requests** fetches up to 10 recent requests, then each title's details, because request entries carry no title.
 - **Upcoming films** uses `/discover/movies?primaryReleaseDateGte=<today>&sortBy=popularity.desc`.
 
+## Phase 2
+
+Phase 2 covers trailers, ratings, fuller details with box office, and advanced request options. Its design is in [SEERR-PHASE2-DESIGN.md](SEERR-PHASE2-DESIGN.md), written 27 Oct and awaiting approval.
+
 ## Open questions for Gary
 
 1. Should the Discover button appear on Cindy's Shield later, or stay Gary-only?
