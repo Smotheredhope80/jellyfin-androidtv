@@ -2,6 +2,12 @@ package org.jellyfin.androidtv.ui.settings.screen
 
 import android.text.format.Formatter
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import org.jellyfin.androidtv.data.seerr.SeerrRepository
+import org.jellyfin.androidtv.ui.navigation.Destinations
+import org.jellyfin.androidtv.ui.navigation.NavigationRepository
+import org.jellyfin.androidtv.ui.settings.compat.SettingsViewModel
+import org.koin.compose.viewmodel.koinActivityViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -29,12 +35,33 @@ fun SettingsDeveloperScreen() {
 	val context = LocalContext.current
 	val isTvDevice = remember(context) { context.isTvDevice() }
 	val isDeveloperBuild = BuildConfig.DEVELOPMENT
+	val seerrRepository = koinInject<SeerrRepository>()
+	val navigationRepository = koinInject<NavigationRepository>()
+	val settingsViewModel = koinActivityViewModel<SettingsViewModel>()
 
 	SettingsColumn {
 		item {
 			ListSection(
 				overlineContent = { Text(stringResource(R.string.settings).uppercase()) },
 				headingContent = { Text(stringResource(R.string.pref_developer_link)) },
+			)
+		}
+
+		// Seerr is opt-in, so its entry lives here rather than on the main settings screen
+		item {
+			val seerrSession by seerrRepository.session.collectAsState()
+			val seerrAvailable by seerrRepository.available.collectAsState(false)
+			ListButton(
+				headingContent = { Text(stringResource(R.string.pref_seerr)) },
+				captionContent = {
+					val session = seerrSession
+					if (session != null && seerrAvailable) Text(stringResource(R.string.pref_seerr_signed_in, session.seerrUserName))
+					else Text(stringResource(R.string.pref_seerr_not_set_up))
+				},
+				onClick = {
+					settingsViewModel.hide()
+					navigationRepository.navigate(Destinations.seerrSetup)
+				}
 			)
 		}
 

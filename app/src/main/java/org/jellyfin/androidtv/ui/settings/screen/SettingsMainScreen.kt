@@ -1,14 +1,6 @@
 package org.jellyfin.androidtv.ui.settings.screen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import org.jellyfin.androidtv.data.seerr.SeerrRepository
-import org.jellyfin.androidtv.ui.navigation.Destinations
-import org.jellyfin.androidtv.ui.navigation.NavigationRepository
-import org.jellyfin.androidtv.ui.settings.compat.SettingsViewModel
-import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinActivityViewModel
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import org.jellyfin.androidtv.R
@@ -23,9 +15,6 @@ import org.jellyfin.androidtv.ui.settings.composable.SettingsColumn
 @Composable
 fun SettingsMainScreen() {
 	val router = LocalRouter.current
-	val seerrRepository = koinInject<SeerrRepository>()
-	val navigationRepository = koinInject<NavigationRepository>()
-	val settingsViewModel = koinActivityViewModel<SettingsViewModel>()
 
 	SettingsColumn {
 		item {
@@ -66,24 +55,6 @@ fun SettingsMainScreen() {
 				leadingContent = { Icon(painterResource(R.drawable.ic_next), contentDescription = null) },
 				headingContent = { Text(stringResource(R.string.pref_playback)) },
 				onClick = { router.push(Routes.PLAYBACK) }
-			)
-		}
-
-		item {
-			val seerrSession by seerrRepository.session.collectAsState()
-			val seerrAvailable by seerrRepository.available.collectAsState(false)
-			ListButton(
-				leadingContent = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
-				headingContent = { Text(stringResource(R.string.pref_seerr)) },
-				captionContent = {
-					val session = seerrSession
-					if (session != null && seerrAvailable) Text(stringResource(R.string.pref_seerr_signed_in, session.seerrUserName))
-					else Text(stringResource(R.string.pref_seerr_not_set_up))
-				},
-				onClick = {
-					settingsViewModel.hide()
-					navigationRepository.navigate(Destinations.seerrSetup)
-				}
 			)
 		}
 

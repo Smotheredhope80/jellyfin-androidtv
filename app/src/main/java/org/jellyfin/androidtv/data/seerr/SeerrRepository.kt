@@ -15,6 +15,7 @@ import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.preference.SeerrPreferences
 import timber.log.Timber
 import java.time.LocalDate
+import kotlin.coroutines.cancellation.CancellationException
 
 data class SeerrSession(
 	val serverUrl: String,
@@ -101,6 +102,8 @@ class SeerrRepository(
 		if (current != null) {
 			try {
 				client.post(current.serverUrl, "/auth/logout", current.cookie, body = "{}")
+			} catch (err: CancellationException) {
+				throw err
 			} catch (err: Exception) {
 				// The local session is already gone; a failed server logout only leaves the cookie to expire
 				Timber.w(err, "Seerr logout failed")
@@ -195,9 +198,18 @@ class SeerrRepository(
 				.distinct()
 				.map { (type, tmdbId) ->
 					async {
-						runCatching { title(type, tmdbId) }.getOrNull()?.let { title ->
-							SeerrCard(title.type, title.tmdbId, title.title, title.year, title.posterPath, title.availability)
+						// One missing title should not hide the rest of the row
+						val title = try {
+							title(type, tmdbId)
+						} catch (err: CancellationException) {
+							throw err
+						} catch (err: SeerrSignedOutException) {
+							throw err
+						} catch (err: Exception) {
+							Timber.w(err, "Seerr request title $tmdbId failed")
+							null
 						}
+						title?.let { SeerrCard(it.type, it.tmdbId, it.title, it.year, it.posterPath, it.availability) }
 					}
 				}
 				.awaitAll()
