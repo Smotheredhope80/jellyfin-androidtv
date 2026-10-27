@@ -15,6 +15,7 @@ import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.preference.SeerrPreferences
 import timber.log.Timber
 import java.time.LocalDate
+import java.util.Locale
 import kotlin.coroutines.cancellation.CancellationException
 
 data class SeerrSession(
@@ -27,6 +28,12 @@ data class SeerrSession(
 
 /** Thrown when Seerr no longer accepts the stored session; the session has already been cleared. */
 class SeerrSignedOutException : Exception("Seerr session expired")
+
+/** Thrown when request options were chosen but the Seerr user may no longer choose them. */
+class SeerrAdvancedNotAllowedException : Exception("Advanced requests are not allowed for this Seerr user")
+
+private const val PERMISSIONS_MAX_AGE_MS = 10 * 60 * 1000L
+private const val SERVICE_DETAILS_MAX_AGE_MS = 5 * 60 * 1000L
 
 enum class SeerrDiscoverRow(val path: String, val fallbackType: SeerrMediaType?) {
 	TRENDING("/discover/trending", null),
@@ -45,9 +52,18 @@ class SeerrRepository(
 	private val client: SeerrClient,
 	private val preferences: SeerrPreferences,
 	userRepository: UserRepository,
+	/** Country used to pick certifications; Seerr's own region setting is not public. */
+	private val region: () -> String = { Locale.getDefault().country },
+	private val clock: () -> Long = System::currentTimeMillis,
 ) {
 	private val _session = MutableStateFlow(loadSession())
 	val session: StateFlow<SeerrSession?> = _session.asStateFlow()
+
+	// Memory only: permissions are re-read from Seerr and never stored
+	private data class Timed<T>(val value: T, val at: Long)
+
+	private var permissions: Timed<Long>? = null
+	private val serviceDetailsCache = mutableMapOf<Pair<SeerrMediaType, Int>, Timed<SeerrServiceDetails>>()
 
 	/** True only when a Seerr session exists for the Jellyfin user that is signed in now. */
 	val available: Flow<Boolean> = combine(session, userRepository.currentUser) { session, user ->
@@ -92,6 +108,8 @@ class SeerrRepository(
 		preferences[SeerrPreferences.jellyfinUserId] = jellyfinUserId
 		preferences[SeerrPreferences.seerrUserId] = user.id
 		preferences[SeerrPreferences.seerrUserName] = user.label
+		clearCaches()
+		permissions = Timed(user.permissions, clock())
 		_session.value = loadSession()
 		return user
 	}
@@ -116,7 +134,13 @@ class SeerrRepository(
 		preferences.delete(SeerrPreferences.jellyfinUserId)
 		preferences.delete(SeerrPreferences.seerrUserId)
 		preferences.delete(SeerrPreferences.seerrUserName)
+		clearCaches()
 		_session.value = null
+	}
+
+	private fun clearCaches() {
+		permissions = null
+		synchronized(serviceDetailsCache) { serviceDetailsCache.clear() }
 	}
 
 	/**
@@ -170,15 +194,79 @@ class SeerrRepository(
 	suspend fun title(type: SeerrMediaType, tmdbId: Int): SeerrTitle = authenticated { session ->
 		val body = client.get(session.serverUrl, "/${type.apiName}/$tmdbId", session.cookie).body
 		when (type) {
-			SeerrMediaType.MOVIE -> SeerrClient.json.decodeFromString<SeerrMovieDetails>(body).toTitle()
-			SeerrMediaType.TV -> SeerrClient.json.decodeFromString<SeerrTvDetails>(body).toTitle()
+			SeerrMediaType.MOVIE -> SeerrClient.json.decodeFromString<SeerrMovieDetails>(body).toTitle(region())
+			SeerrMediaType.TV -> SeerrClient.json.decodeFromString<SeerrTvDetails>(body).toTitle(region())
 		}
 	}
 
-	suspend fun request(type: SeerrMediaType, tmdbId: Int, seasons: Collection<Int>): SeerrRequestOutcome = authenticated { session ->
-		val body = seerrRequestBody(type, tmdbId, seasons)
-		val response = client.post(session.serverUrl, "/request", session.cookie, body)
-		seerrRequestOutcome(SeerrClient.json.decodeFromString<SeerrRequest>(response.body).status)
+	/** Rotten Tomatoes (and, for films, IMDb) scores. Seerr answers 404 when it has none. */
+	suspend fun ratings(type: SeerrMediaType, tmdbId: Int): SeerrRatings = authenticated { session ->
+		val path = when (type) {
+			SeerrMediaType.MOVIE -> "/movie/$tmdbId/ratingscombined"
+			SeerrMediaType.TV -> "/tv/$tmdbId/ratings"
+		}
+		val body = try {
+			client.get(session.serverUrl, path, session.cookie).body
+		} catch (err: SeerrHttpException) {
+			if (err.code == 404) return@authenticated SeerrRatings()
+			throw err
+		}
+		when (type) {
+			SeerrMediaType.MOVIE -> SeerrClient.json.decodeFromString<SeerrCombinedRatings>(body).toRatings()
+			SeerrMediaType.TV -> SeerrClient.json.decodeFromString<SeerrRtRating>(body).toRatings()
+		}
+	}
+
+	/** Whether the signed-in Seerr user may choose server, profile, folder and tags. */
+	suspend fun canRequestAdvanced(): Boolean {
+		val cached = permissions
+		val value = if (cached != null && clock() - cached.at < PERMISSIONS_MAX_AGE_MS) {
+			cached.value
+		} else {
+			authenticated { session ->
+				val user = SeerrClient.json.decodeFromString<SeerrUser>(client.get(session.serverUrl, "/auth/me", session.cookie).body)
+				permissions = Timed(user.permissions, clock())
+				user.permissions
+			}
+		}
+		return hasAdvancedRequestPermission(value)
+	}
+
+	/** Non-4K Radarr (films) or Sonarr (shows) servers, default first. */
+	suspend fun requestServers(type: SeerrMediaType): List<SeerrServiceServer> = authenticated { session ->
+		val body = client.get(session.serverUrl, "/service/${type.arrName}", session.cookie).body
+		filterRequestServers(SeerrClient.json.decodeFromString<List<SeerrServiceServer>>(body))
+	}
+
+	/** Profiles, root folders, tags and defaults for one server, cached for a few minutes. */
+	suspend fun serviceDetails(type: SeerrMediaType, serverId: Int): SeerrServiceDetails {
+		val key = type to serverId
+		synchronized(serviceDetailsCache) { serviceDetailsCache[key] }
+			?.takeIf { clock() - it.at < SERVICE_DETAILS_MAX_AGE_MS }
+			?.let { return it.value }
+
+		return authenticated { session ->
+			val body = client.get(session.serverUrl, "/service/${type.arrName}/$serverId", session.cookie).body
+			SeerrClient.json.decodeFromString<SeerrServiceDetails>(body).also { details ->
+				synchronized(serviceDetailsCache) { serviceDetailsCache[key] = Timed(details, clock()) }
+			}
+		}
+	}
+
+	suspend fun request(
+		type: SeerrMediaType,
+		tmdbId: Int,
+		seasons: Collection<Int>,
+		advanced: SeerrAdvancedRequest? = null,
+	): SeerrRequestOutcome {
+		// The server accepts these fields from anyone, so re-check before sending them
+		if (advanced != null && !canRequestAdvanced()) throw SeerrAdvancedNotAllowedException()
+
+		return authenticated { session ->
+			val body = seerrRequestBody(type, tmdbId, seasons, advanced)
+			val response = client.post(session.serverUrl, "/request", session.cookie, body)
+			seerrRequestOutcome(SeerrClient.json.decodeFromString<SeerrRequest>(response.body).status)
+		}
 	}
 
 	/** The signed-in user's latest requests as cards. Request entries carry no title, so details are fetched per item. */

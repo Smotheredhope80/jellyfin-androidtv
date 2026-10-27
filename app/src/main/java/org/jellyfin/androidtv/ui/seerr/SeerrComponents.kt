@@ -50,9 +50,18 @@ import coil3.compose.AsyncImage
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.seerr.SeerrAvailability
 import org.jellyfin.androidtv.data.seerr.SeerrCard
+import org.jellyfin.androidtv.data.seerr.SeerrMediaType
+import org.jellyfin.androidtv.data.seerr.SeerrRatings
+import org.jellyfin.androidtv.data.seerr.SeerrTitle
 import org.jellyfin.androidtv.data.seerr.tmdbImageUrl
 import org.jellyfin.androidtv.ui.base.Text
 import org.koin.compose.koinInject
+import timber.log.Timber
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.format.FormatStyle
+import java.util.Locale
 
 internal val SeerrBackground = Color(0xFF0F172A)
 internal val SeerrSurface = Color(0xFF1E293B)
@@ -69,6 +78,68 @@ fun seerrAvailabilityLabel(availability: SeerrAvailability): String? = when (ava
 	SeerrAvailability.PROCESSING -> stringResource(R.string.seerr_status_processing)
 	SeerrAvailability.PARTIAL -> stringResource(R.string.seerr_status_partial)
 	SeerrAvailability.AVAILABLE -> stringResource(R.string.seerr_status_available)
+}
+
+/** `Rotten Tomatoes 85% · Audience 65% · IMDb 6.5 · TMDB 7.2`, text only; null when nothing is known. */
+@Composable
+fun seerrRatingsLine(title: SeerrTitle, ratings: SeerrRatings?): String? = listOfNotNull(
+	ratings?.rtCritics?.let { stringResource(R.string.seerr_rating_rt, it) },
+	ratings?.rtAudience?.let { stringResource(R.string.seerr_rating_rt_audience, it) },
+	ratings?.imdb?.let { stringResource(R.string.seerr_rating_imdb, oneDecimal(it)) },
+	title.tmdbScore?.let { stringResource(R.string.seerr_rating_tmdb, oneDecimal(it)) },
+).takeIf { it.isNotEmpty() }?.joinToString(SEERR_SEPARATOR)
+
+/** Up to five single lines of extra details for a film or show, skipping anything unknown. */
+@Composable
+fun seerrInfoLines(title: SeerrTitle): List<String> {
+	val info = title.info
+	fun line(vararg parts: String?) = parts.filterNotNull().filter { it.isNotBlank() }.takeIf { it.isNotEmpty() }?.joinToString(SEERR_SEPARATOR)
+
+	val ratingAndGenres = line(info.certification, info.genres.takeIf { it.isNotEmpty() }?.joinToString(", "))
+	val cast = info.cast.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.seerr_cast, it.joinToString(", ")) }
+	val credit = info.credit.takeIf { it.isNotEmpty() }?.joinToString(", ")
+	val companies = info.companies.takeIf { it.isNotEmpty() }?.joinToString(", ")
+
+	return when (title.type) {
+		SeerrMediaType.MOVIE -> listOfNotNull(
+			ratingAndGenres,
+			line(formatSeerrDate(info.date), info.status),
+			line(
+				info.revenue?.let { stringResource(R.string.seerr_box_office, it) },
+				info.budget?.let { stringResource(R.string.seerr_budget, it) },
+			),
+			line(credit?.let { stringResource(R.string.seerr_directed_by, it) }, companies),
+			cast,
+		)
+
+		SeerrMediaType.TV -> {
+			val first = formatSeerrDate(info.date)
+			val last = formatSeerrDate(info.lastAirDate)
+			val aired = if (first != null && last != null && first != last) stringResource(R.string.seerr_date_range, first, last) else first
+			listOfNotNull(
+				ratingAndGenres,
+				line(aired, info.episodeRuntimeMinutes?.let { stringResource(R.string.seerr_episode_runtime, it) }, info.status),
+				line(companies, formatSeerrDate(info.nextEpisodeDate)?.let { stringResource(R.string.seerr_next_episode, it) }),
+				credit?.let { stringResource(R.string.seerr_created_by, it) },
+				cast,
+			)
+		}
+	}
+}
+
+internal const val SEERR_SEPARATOR = "  ·  "
+
+private fun oneDecimal(value: Double) = String.format(Locale.getDefault(), "%.1f", value)
+
+/** Formats Seerr's `yyyy-MM-dd` dates for the current locale; other text is returned unchanged. */
+fun formatSeerrDate(value: String?): String? {
+	if (value.isNullOrBlank()) return null
+	return try {
+		LocalDate.parse(value.take(10)).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+	} catch (err: DateTimeParseException) {
+		Timber.d(err, "Unexpected Seerr date")
+		value
+	}
 }
 
 @Composable

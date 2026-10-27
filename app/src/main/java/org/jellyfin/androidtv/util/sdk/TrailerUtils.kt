@@ -65,6 +65,10 @@ object TrailerUtils {
 		}
 	}
 
+	/** Opens a YouTube video by its key, using the same embedded player and fallback as item trailers. */
+	@JvmStatic
+	fun getYoutubeTrailerIntent(context: Context, videoKey: String): Intent = getTrailerIntent(context, "$YOUTUBE_URL$videoKey")
+
 	@JvmStatic
 	fun getExternalTrailerIntent(context: Context, item: BaseItemDto): Intent? = item.remoteTrailers.orEmpty()
 		.mapNotNull { it.url?.let { url -> getTrailerIntent(context, url) } }

@@ -92,6 +92,100 @@ class SeerrRepositoryTests : FunSpec({
 		verify { prefs.delete(SeerrPreferences.sessionCookie) }
 	}
 
+	test("missing ratings are empty, not an error, and do not check the session") {
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/movie/11/ratingscombined", any(), any()) } throws SeerrHttpException(404, "No ratings found.")
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl())
+
+		repository.ratings(SeerrMediaType.MOVIE, 11).isEmpty shouldBe true
+		coVerify(exactly = 0) { client.get(any(), "/auth/me", any(), any()) }
+	}
+
+	test("show ratings use the Rotten Tomatoes endpoint") {
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/tv/22/ratings", any(), any()) } returns SeerrResponse("""{"criticsScore":91}""", emptyList())
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl())
+
+		repository.ratings(SeerrMediaType.TV, 22).rtCritics shouldBe 91
+	}
+
+	test("permissions are read once and re-read after ten minutes") {
+		var now = 0L
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/auth/me", any(), any()) } returns SeerrResponse("""{"id":4,"permissions":8224}""", emptyList())
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl(), region = { "GB" }, clock = { now })
+
+		repository.canRequestAdvanced() shouldBe true
+		now += 9 * 60 * 1000L
+		repository.canRequestAdvanced() shouldBe true
+		coVerify(exactly = 1) { client.get(any(), "/auth/me", any(), any()) }
+
+		now += 2 * 60 * 1000L
+		repository.canRequestAdvanced()
+		coVerify(exactly = 2) { client.get(any(), "/auth/me", any(), any()) }
+	}
+
+	val advanced = SeerrAdvancedRequest(
+		selected = SeerrRequestOptions(0, profileId = 7, rootFolder = "/movies", languageProfileId = null, tags = emptySet()),
+		defaults = SeerrRequestOptions(0, profileId = 6, rootFolder = "/movies", languageProfileId = null, tags = emptySet()),
+		defaultServerId = 0,
+	)
+
+	test("advanced options are refused without the permission and nothing is sent") {
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/auth/me", any(), any()) } returns SeerrResponse("""{"id":4,"permissions":32}""", emptyList())
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl())
+
+		shouldThrow<SeerrAdvancedNotAllowedException> { repository.request(SeerrMediaType.MOVIE, 11, emptySet(), advanced) }
+		coVerify(exactly = 0) { client.post(any(), "/request", any(), any()) }
+	}
+
+	test("advanced options are sent when allowed") {
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/auth/me", any(), any()) } returns SeerrResponse("""{"id":4,"permissions":8192}""", emptyList())
+		coEvery { client.post(any(), "/request", any(), any()) } returns SeerrResponse("""{"id":1,"status":2}""", emptyList())
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl())
+
+		repository.request(SeerrMediaType.MOVIE, 11, emptySet(), advanced) shouldBe SeerrRequestOutcome.APPROVED
+		coVerify { client.post(any(), "/request", any(), """{"mediaType":"movie","mediaId":11,"profileId":7}""") }
+	}
+
+	test("a plain request needs no permission check") {
+		val client = mockk<SeerrClient>()
+		coEvery { client.post(any(), "/request", any(), any()) } returns SeerrResponse("""{"id":1,"status":1}""", emptyList())
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl())
+
+		repository.request(SeerrMediaType.MOVIE, 11, emptySet()) shouldBe SeerrRequestOutcome.WAITING_FOR_APPROVAL
+		coVerify(exactly = 0) { client.get(any(), "/auth/me", any(), any()) }
+	}
+
+	test("server details are cached for five minutes") {
+		var now = 0L
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/service/sonarr/3", any(), any()) } returns SeerrResponse("""{"server":{"id":3}}""", emptyList())
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl(), clock = { now })
+
+		repository.serviceDetails(SeerrMediaType.TV, 3)
+		now += 4 * 60 * 1000L
+		repository.serviceDetails(SeerrMediaType.TV, 3)
+		coVerify(exactly = 1) { client.get(any(), "/service/sonarr/3", any(), any()) }
+
+		now += 2 * 60 * 1000L
+		repository.serviceDetails(SeerrMediaType.TV, 3)
+		coVerify(exactly = 2) { client.get(any(), "/service/sonarr/3", any(), any()) }
+	}
+
+	test("server lists drop 4K servers") {
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/service/radarr", any(), any()) } returns SeerrResponse(
+			"""[{"id":0,"name":"Main","is4k":false,"isDefault":true},{"id":1,"name":"4K","is4k":true,"isDefault":true}]""",
+			emptyList(),
+		)
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl())
+
+		repository.requestServers(SeerrMediaType.MOVIE).map { it.id } shouldBe listOf(0)
+	}
+
 	test("calls send the stored cookie to the stored server") {
 		val client = mockk<SeerrClient>()
 		coEvery { client.get(any(), any(), any(), any()) } returns SeerrResponse(pageBody, emptyList())
