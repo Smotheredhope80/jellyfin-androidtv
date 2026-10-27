@@ -140,6 +140,20 @@ class SeerrRepositoryTests : FunSpec({
 		coVerify(exactly = 0) { client.post(any(), "/request", any(), any()) }
 	}
 
+	test("a permission removed in Seerr blocks advanced options at once, despite the cache") {
+		val client = mockk<SeerrClient>()
+		coEvery { client.get(any(), "/auth/me", any(), any()) } returnsMany listOf(
+			SeerrResponse("""{"id":4,"permissions":8192}""", emptyList()),
+			SeerrResponse("""{"id":4,"permissions":32}""", emptyList()),
+		)
+		val repository = SeerrRepository(client, preferences(signedIn = true), UserRepositoryImpl(), clock = { 0L })
+
+		repository.canRequestAdvanced() shouldBe true
+		shouldThrow<SeerrAdvancedNotAllowedException> { repository.request(SeerrMediaType.MOVIE, 11, emptySet(), advanced) }
+		coVerify(exactly = 2) { client.get(any(), "/auth/me", any(), any()) }
+		coVerify(exactly = 0) { client.post(any(), "/request", any(), any()) }
+	}
+
 	test("advanced options are sent when allowed") {
 		val client = mockk<SeerrClient>()
 		coEvery { client.get(any(), "/auth/me", any(), any()) } returns SeerrResponse("""{"id":4,"permissions":8192}""", emptyList())

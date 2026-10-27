@@ -61,10 +61,10 @@ import org.jellyfin.androidtv.ui.base.list.ListButton
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.util.sdk.TrailerUtils
-import timber.log.Timber
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
+import timber.log.Timber
 
 class SeerrDetailsFragment : Fragment() {
 	companion object {

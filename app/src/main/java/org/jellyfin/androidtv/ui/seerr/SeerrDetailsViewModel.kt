@@ -204,8 +204,13 @@ class SeerrDetailsViewModel(
 					updateOptions { it.copy(serverFellBack = true) }
 				} catch (fallbackErr: CancellationException) {
 					throw fallbackErr
+				} catch (fallbackErr: SeerrSignedOutException) {
+					_state.update { it.copy(signedOut = true, options = null) }
 				} catch (fallbackErr: Exception) {
-					updateOptions { it.copy(loading = false, error = err.message ?: err.javaClass.simpleName) }
+					// Drop the old server's values so the panel shows the error and the defaults fallback
+					updateOptions {
+						it.copy(loading = false, error = err.message ?: err.javaClass.simpleName, details = null, defaults = null, selected = null)
+					}
 				}
 			}
 		}

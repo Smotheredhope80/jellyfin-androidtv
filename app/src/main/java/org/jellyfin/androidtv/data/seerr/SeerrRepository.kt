@@ -217,10 +217,13 @@ class SeerrRepository(
 		}
 	}
 
-	/** Whether the signed-in Seerr user may choose server, profile, folder and tags. */
-	suspend fun canRequestAdvanced(): Boolean {
+	/**
+	 * Whether the signed-in Seerr user may choose server, profile, folder and tags. [fresh] skips the
+	 * cache, so a permission removed in Seerr takes effect immediately.
+	 */
+	suspend fun canRequestAdvanced(fresh: Boolean = false): Boolean {
 		val cached = permissions
-		val value = if (cached != null && clock() - cached.at < PERMISSIONS_MAX_AGE_MS) {
+		val value = if (!fresh && cached != null && clock() - cached.at < PERMISSIONS_MAX_AGE_MS) {
 			cached.value
 		} else {
 			authenticated { session ->
@@ -259,8 +262,8 @@ class SeerrRepository(
 		seasons: Collection<Int>,
 		advanced: SeerrAdvancedRequest? = null,
 	): SeerrRequestOutcome {
-		// The server accepts these fields from anyone, so re-check before sending them
-		if (advanced != null && !canRequestAdvanced()) throw SeerrAdvancedNotAllowedException()
+		// The server accepts these fields from anyone, so re-check live before sending them
+		if (advanced != null && !canRequestAdvanced(fresh = true)) throw SeerrAdvancedNotAllowedException()
 
 		return authenticated { session ->
 			val body = seerrRequestBody(type, tmdbId, seasons, advanced)

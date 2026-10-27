@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -37,6 +39,21 @@ import org.jellyfin.androidtv.ui.base.list.ListButton
 
 private val RowWidth = Modifier.fillMaxWidth(0.6f)
 
+/** Lazy item index of a choice list's first choice: after the panel heading and the list heading. */
+private const val PICKER_FIRST_CHOICE_ITEM = 2
+
+/** Position of the current choice in a choice list (the first tag that is ticked), or 0. */
+private fun pickerCheckedIndex(picker: SeerrOptionPicker, options: SeerrOptionsState, details: SeerrServiceDetails): Int {
+	val selected = options.selected ?: return 0
+	return when (picker) {
+		SeerrOptionPicker.SERVER -> options.servers.indexOfFirst { it.id == selected.serverId }
+		SeerrOptionPicker.PROFILE -> details.profiles.indexOfFirst { it.id == selected.profileId }
+		SeerrOptionPicker.FOLDER -> details.rootFolders.indexOfFirst { it.path == selected.rootFolder }
+		SeerrOptionPicker.LANGUAGE -> details.languageProfiles.orEmpty().indexOfFirst { it.id == selected.languageProfileId }
+		SeerrOptionPicker.TAGS -> details.tags.indexOfFirst { it.id in selected.tags }
+	}.coerceAtLeast(0)
+}
+
 /**
  * Full-screen request options for users allowed to choose server, profile, folder and tags. It replaces
  * the details content while open; Back closes a choice list first, then the panel.
@@ -50,15 +67,21 @@ internal fun SeerrRequestOptionsPanel(
 	viewModel: SeerrDetailsViewModel,
 ) {
 	val firstFocus = remember { FocusRequester() }
+	val listState = rememberLazyListState()
 	val details = options.details
 	val picker = options.picker
 
-	// Focus the first control whenever the panel, its loading state or the open choice list changes
+	// Focus the first control whenever the panel, its loading state or the open choice list changes.
+	// The target may be a choice far down a long list, so scroll it into the composed window first.
 	LaunchedEffect(picker, options.loading, options.error, options.ready) {
+		val target = if (picker != null && details != null) PICKER_FIRST_CHOICE_ITEM + pickerCheckedIndex(picker, options, details) else 0
+		listState.scrollToItem(target)
+		withFrameNanos { }
 		runCatching { firstFocus.requestFocus() }
 	}
 
 	LazyColumn(
+		state = listState,
 		contentPadding = PaddingValues(horizontal = 48.dp, vertical = 36.dp),
 		verticalArrangement = Arrangement.spacedBy(6.dp),
 		modifier = Modifier.fillMaxSize().focusRestorer().focusGroup(),
@@ -248,7 +271,7 @@ private fun LazyListScope.pickerItems(
 	}
 
 	// Focus starts on the current choice so a quick OK keeps it
-	val focusIndex = choices.indexOfFirst { it.checked }.coerceAtLeast(0)
+	val focusIndex = pickerCheckedIndex(picker, options, details)
 	items(choices.withIndex().toList(), key = { it.value.key }) { (index, choice) ->
 		val name = choice.name ?: stringResource(R.string.seerr_option_unknown, choice.fallbackId)
 		ListButton(
