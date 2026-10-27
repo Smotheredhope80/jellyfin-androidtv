@@ -1,4 +1,14 @@
-## Current handoff — 27 October 2026: dev33 Seerr phase 2 built and reviewed, not installed
+## Current handoff — 27 October 2026: dev33 installed on Gary's Shield, T06 pending
+
+Gary approved the install.
+- **Preflight:** dev32 hash matched, and media state was 0.
+- **Install:** `adb install -r` of dev33 r2 at 19:15 device time.
+- **Readback:** code 33, device hash `95F6520D…8D13775C` matches the candidate, and the signer is the same as dev32. No uninstall or data clear.
+- **Cindy's Shield:** unchanged.
+
+**Next:** Gary runs T06 (`SHIELD-TEST-CATALOG.md`). Steps 4–7 need his Seerr account to have Advanced Requests or admin. Rollback is dev32 r2 with `install -r -d`, which is untested.
+
+## Previous handoff — 27 October 2026: dev33 Seerr phase 2 built and reviewed, not installed
 
 Gary approved the phase 2 design and asked for implementation, tests, lint and the Tier 3 review, with no install.
 

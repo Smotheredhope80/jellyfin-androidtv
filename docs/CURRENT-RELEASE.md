@@ -1,6 +1,19 @@
+## Dev33 installed on Gary's Shield — 27 October 2026
+
+**Installed; T06 pending.** Gary authorized this in chat ("Install dev33 revision 2 on my Shield (192.168.68.69) over dev32 and walk me through T06").
+
+- **Preflight** on `192.168.68.69:5555` (SHIELD Android TV): dev32 code 32 installed, device hash `F89AE0F7…AA5D6332` matched the retained candidate, Jellyfin media session state 0.
+- **Install:** `adb install -r` succeeded at 19:15 device time.
+- **Readback:** `0.0.0-dev.33`/code 33, device APK SHA256 `95F6520D…8D13775C` (matches the candidate below), signatures `b8959ac9`, the same as dev32. No uninstall or data clear.
+- **Last tested build:** dev32 r2 stays the last tested build until T06 passes.
+- **Unchanged:** Cindy's Shield (V9.0/dev30).
+- **Rollback:** the dev32 r2 APK; the downgrade needs `-d` and is untested.
+
+[Install log](../../apk-inspection/20261027-dev33-seerr-phase2-r2/install-gary-shield.log).
+
 ## Dev33 Seerr phase 2 candidate (revision 2) — 27 October 2026
 
-**Latest experimental build. NOT INSTALLED** (Gary: "Don't install yet"). Dev32 r2 stays the installed and last tested build on Gary's Shield, and Cindy's Shield stays on V9.0/dev30.
+**Latest experimental build; installed on Gary's Shield (above).** Cindy's Shield stays on V9.0/dev30.
 
 - **APK:** `apk-inspection/20261027-dev33-seerr-phase2-r2/jellyfin-androidtv-v0.0.0-dev.33-debug.apk`, 64,814,703 bytes, SHA256 `95F6520D39050937E27A0C14FC5240EF37183483AD0E873FFCBD6E018D13775C`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.33` / code 33. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
 - **Source:** commit `8f67dd9bd` (feature `83a3979fb` plus review fixes) on `experiment/mobile-inspired-tv-v12`. Local only.
