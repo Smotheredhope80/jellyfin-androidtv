@@ -1,6 +1,6 @@
 ## Dev32 installed on Gary's Shield — 27 October 2026
 
-**Installed, T05 pending.** Gary authorized this in chat ("install dev32 revision 2 on my Shield (192.168.68.69) over dev31"). Preflight on `192.168.68.69:5555` (SHIELD Android TV): installed dev31 code 31, device hash `1ADE2C11…464A8A` matched the retained candidate, Jellyfin media session state 0. `adb install -r` succeeded at 06:30 device time. Readback: `0.0.0-dev.32`/code 32, device APK SHA256 `F89AE0F7…AA5D6332`, matching the candidate below. The in-place update was accepted, which means the signer still matches. No uninstall or data clear. Cindy's Shield unchanged (V9.0/dev30). Rollback is the dev31 APK; downgrade needs `-d` and is untested. [Install log](../../apk-inspection/20261027-dev32-seerr-discover-r2/install-gary-shield.log).
+**Installed; T05 PASS (owner summary).** After the checklist, Gary reported "It worked" on 27 Oct. Per-step results were not itemised. Dev32 r2 is now the last tested build on Gary's Shield. Gary authorized this in chat ("install dev32 revision 2 on my Shield (192.168.68.69) over dev31"). Preflight on `192.168.68.69:5555` (SHIELD Android TV): installed dev31 code 31, device hash `1ADE2C11…464A8A` matched the retained candidate, Jellyfin media session state 0. `adb install -r` succeeded at 06:30 device time. Readback: `0.0.0-dev.32`/code 32, device APK SHA256 `F89AE0F7…AA5D6332`, matching the candidate below. The in-place update was accepted, which means the signer still matches. No uninstall or data clear. Cindy's Shield unchanged (V9.0/dev30). Rollback is the dev31 APK; downgrade needs `-d` and is untested. [Install log](../../apk-inspection/20261027-dev32-seerr-discover-r2/install-gary-shield.log).
 
 ## Dev32 Seerr candidate (revision 2) — 27 October 2026
 
@@ -11,7 +11,7 @@
 - **Checks:** 71 tests pass. Lint 81/329/423 is identical to dev31. Independent review: ACCEPT WITH NOTES.
 - **Superseded:** revision 1 (`20261027-dev32-seerr-discover/`, SHA256 `644F7032…AD22BA`, also code 32) was rejected in review. Never install it.
 - **Install:** dev32 would install in place over dev31 (same signer, higher code). Rollback to dev31 needs `install -r -d`, which is untested.
-- **NOT RUN:** T05.
+- **T05:** PASS (owner summary, 27 Oct). Steps were not itemised.
 
 ## Dev31 installed on Gary's Shield — 26 October 2026
 

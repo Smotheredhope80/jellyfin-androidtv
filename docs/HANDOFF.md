@@ -1,4 +1,13 @@
-## Current handoff — 27 October 2026: dev32 installed on Gary's Shield, T05 pending
+## Current handoff — 27 October 2026: dev32 T05 PASS on Gary's Shield
+
+Gary ran T05 and reported "It worked". This is recorded as a PASS from the owner's summary. Step results were not itemised, so the step 5 "Open in Jellyfin" button (which uses data outside Seerr's published API) and the step 9 check with a second user are not separately confirmed. Dev32 r2 is the last tested build on Gary's Shield. Cindy's Shield stays on V9.0/dev30.
+
+**Next (unassigned):**
+- the no-captions "Captions on" toast;
+- Seerr phase 2 items from `SEERR-DISCOVER-DESIGN.md`;
+- whether to extend Seerr to other profiles (Cindy), which is Gary's decision.
+
+## Previous handoff — 27 October 2026: dev32 installed on Gary's Shield, T05 pending
 
 Gary approved the install in chat. Dev32 r2 is installed over dev31 on `192.168.68.69:5555` with `adb install -r`. Readback: code 32, device APK hash `F89AE0F7…` matches the candidate. Preflight showed dev31 (`1ADE2C11…`) and no active playback. No data clear. Cindy's Shield unchanged. Details in `CURRENT-RELEASE.md`.
 

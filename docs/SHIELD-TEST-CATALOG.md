@@ -139,7 +139,7 @@ Expected: captions toggle reliably, the iframe never takes focus, and T02 transp
 
 ## T05 — Seerr discover and request (Dev32)
 
-Evidence: `SEERR-DISCOVER-DESIGN.md`, `data/seerr/`, `ui/seerr/`, `SeerrMappingTests.kt`. Status: physical checks NOT RUN.
+Evidence: `SEERR-DISCOVER-DESIGN.md`, `data/seerr/`, `ui/seerr/`, `SeerrMappingTests.kt`. Status: **PASS (owner summary), 27 Oct 2026, dev32 r2 on Gary's Shield.** After the T05 checklist, Gary reported "It worked". This is a summary result, not step-by-step evidence. Results for the individual steps were not reported separately, including the "Open in Jellyfin" button (step 5), which relies on data outside Seerr's published API, and the second-user check (step 9).
 
 1. Before sign-in, confirm that no Discover button shows in the toolbar.
 2. Settings → Developer → Seerr requests → enter the Seerr address, Jellyfin username and password, then sign in. Use a wrong password once and check that the error shows and the password field clears.
