@@ -1,3 +1,15 @@
+## Dev33 r2 installed on Garrison's Google TV Streamer — 31 October 2026
+
+User requested the latest debug APK while present with ADB enabled. BEDROOM-PC / Codex session `01a1912a-7c6f-7e40-9479-264de1487139` verified Cast name Garrison's Room TV and Google TV Streamer (kirkwood), Android API 34, against the P05 reservation record. Before: official `org.jellyfin.androidtv` present; debug package absent; no playing media session reported. Fresh debug install alongside official app; no uninstall/data clear or prior debug APK to preserve.
+
+- Installed retained dev33 revision 2 using target-specific `adb install -r`: Success, device timestamp `2026-10-31 09:55:13` (Europe/London).
+- Package `org.jellyfin.androidtv.debug`, version `0.0.0-dev.33`, code 33. Device base.apk SHA-256 matches retained input: `95F6520D39050937E27A0C14FC5240EF37183483AD0E873FFCBD6E018D13775C`, 64,814,703 bytes. APK source commit `8f67dd9bdb1c337eb49480d05b5f00b12b1b9797`; no rebuild or source change.
+- Fresh apksigner v1/v2 verification PASS; certificate SHA-256 `d2e58d83d659813ec0264c831535320d3f40659068017666be17d1a5077aeb13`. Both official and debug package names read back after install.
+- Startup command returned Status: ok, but Settings remained the resumed activity. Successful visible startup, sign-in, D-pad, playback and T06: NOT RUN. Gary acknowledged completion; no physical acceptance inferred.
+- Recovery: original official app remains available. Removing only the new debug package would reverse this installation but delete its newly created data; removal was not performed. Retained dev33 r2 APK remains unchanged. No prior debug data backup applicable; downgrade not tested.
+
+Install scope CLOSED; open the debug app from Apps and sign in as needed. Gary's and Cindy's Shields unchanged by this task. Waste: none created.
+
 ## Dev33 installed on Gary's Shield — 27 October 2026
 
 **Installed; T06 pending.** Gary authorized this in chat ("Install dev33 revision 2 on my Shield (192.168.68.69) over dev32 and walk me through T06").

@@ -1,3 +1,7 @@
+## Current handoff — 31 October 2026: Garrison Streamer dev33 r2 installed
+
+User-authorized fresh debug install alongside the official Jellyfin app on Garrison's Google TV Streamer succeeded; code 33 and complete installed APK hash match retained dev33 r2. Artifact signature checked. No prior debug app/data existed; official app retained. Launch request returned ok, but Settings stayed foreground; visible startup, sign-in and physical playback/remote checks NOT RUN. User acknowledged completion. [Exact identity and recovery](CURRENT-RELEASE.md#dev33-r2-installed-on-garrisons-google-tv-streamer--31-october-2026). No build or application-source change. Gary's T06 remains pending. Waste: none created.
+
 ## Current handoff — 27 October 2026: dev33 installed on Gary's Shield, T06 pending
 
 Gary approved the install.
