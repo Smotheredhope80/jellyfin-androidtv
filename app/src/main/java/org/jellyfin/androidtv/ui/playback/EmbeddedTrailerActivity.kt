@@ -117,12 +117,7 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 	}
 
 	private fun showCaptionsResult(result: String?) {
-		val message = when (result?.trim('"')) {
-			"on" -> R.string.msg_trailer_captions_on
-			"off" -> R.string.msg_trailer_captions_off
-			else -> R.string.msg_trailer_captions_unavailable
-		}
-		Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+		Toast.makeText(this, CaptionsToast.fromResult(result).messageRes, Toast.LENGTH_SHORT).show()
 	}
 
 	override fun onResume() {
@@ -212,7 +207,16 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 							player.unloadModule('captions');
 							return 'off';
 						}
+						// No active caption track. Load the module, then confirm a caption track
+						// actually exists before reporting "on" — a trailer with no captions would
+						// otherwise show "Captions on" with nothing displayed.
 						player.loadModule('captions');
+						let tracklist = null;
+						try { tracklist = player.getOption('captions', 'tracklist'); } catch (e) {}
+						if (!tracklist || tracklist.length === 0) {
+							try { player.unloadModule('captions'); } catch (e) {}
+							return 'unavailable';
+						}
 						return 'on';
 					} catch (e) {
 						return 'unavailable';
@@ -252,6 +256,31 @@ class EmbeddedTrailerActivity : FragmentActivity() {
 }
 
 private const val TOGGLE_CAPTIONS_COMMAND = "toggleCaptions()"
+
+/**
+ * Maps a `toggleCaptions()` result to the toast it should show.
+ *
+ * The "Captions on" toast ([ON]) only fires when the YouTube player reports an available
+ * caption track that has been enabled. Trailers without caption tracks report
+ * [UNAVAILABLE], so they no longer show a misleading "Captions on" toast.
+ */
+internal enum class CaptionsToast(val messageRes: Int) {
+	ON(R.string.msg_trailer_captions_on),
+	OFF(R.string.msg_trailer_captions_off),
+	UNAVAILABLE(R.string.msg_trailer_captions_unavailable);
+
+	companion object {
+		/**
+		 * Parses the JS `toggleCaptions()` return value, tolerating the surrounding quotes
+		 * that `WebView.evaluateJavascript` adds to string results.
+		 */
+		fun fromResult(result: String?): CaptionsToast = when (result?.trim('"')) {
+			"on" -> ON
+			"off" -> OFF
+			else -> UNAVAILABLE
+		}
+	}
+}
 
 /** D-pad Down is consumed without a command so focus never enters the YouTube iframe. */
 internal fun trailerConsumesKey(keyCode: Int): Boolean =

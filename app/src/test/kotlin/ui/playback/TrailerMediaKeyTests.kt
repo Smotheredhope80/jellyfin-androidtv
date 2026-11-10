@@ -3,6 +3,7 @@ package org.jellyfin.androidtv.ui.playback
 import android.view.KeyEvent
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 
 class TrailerMediaKeyTests : FunSpec({
 	test("dedicated play and pause have distinct commands") {
@@ -56,5 +57,24 @@ class TrailerMediaKeyTests : FunSpec({
 	test("Back remains available to the activity") {
 		trailerPlaybackCommand(KeyEvent.KEYCODE_BACK) shouldBe null
 		trailerConsumesKey(KeyEvent.KEYCODE_BACK) shouldBe false
+	}
+
+	test("captions toggle result maps to the right toast") {
+		// WebView.evaluateJavascript wraps string results in quotes; fromResult strips them.
+		CaptionsToast.fromResult("\"on\"") shouldBe CaptionsToast.ON
+		CaptionsToast.fromResult("\"off\"") shouldBe CaptionsToast.OFF
+		CaptionsToast.fromResult("on") shouldBe CaptionsToast.ON
+		CaptionsToast.fromResult("off") shouldBe CaptionsToast.OFF
+	}
+
+	test("trailers without caption tracks never show the captions-on toast") {
+		// The JS toggleCaptions() returns "unavailable" when no caption track exists. This
+		// must never map to ON, otherwise the misleading "Captions on" toast fires.
+		CaptionsToast.fromResult("\"unavailable\"") shouldBe CaptionsToast.UNAVAILABLE
+		CaptionsToast.fromResult("unavailable") shouldBe CaptionsToast.UNAVAILABLE
+		CaptionsToast.fromResult(null) shouldBe CaptionsToast.UNAVAILABLE
+		CaptionsToast.fromResult("") shouldBe CaptionsToast.UNAVAILABLE
+		CaptionsToast.fromResult("unavailable") shouldNotBe CaptionsToast.ON
+		CaptionsToast.fromResult(null) shouldNotBe CaptionsToast.ON
 	}
 })
