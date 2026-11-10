@@ -1,4 +1,12 @@
-## Current handoff — 31 October 2026: Garrison Streamer dev33 r2 installed
+## Current handoff — 10 November 2026: P01-JF-T02 trailer captions toast fix + unit tests
+
+Implemented the `P01-JF-T02` trailer no-captions toast fix on `experiment/mobile-inspired-tv-v12` (committed as `2e5f34bda`; pushed to `fork/experiment/mobile-inspired-tv-v12`):
+- `app/src/main/java/org/jellyfin/androidtv/ui/playback/EmbeddedTrailerActivity.kt`: `toggleCaptions()` now checks `player.getOption('captions', 'tracklist')` after `player.loadModule('captions')`; when no caption tracks exist, it unloads the captions module and returns `'unavailable'` instead of `'on'`. Extracted `internal enum class CaptionsToast` (`ON`, `OFF`, `UNAVAILABLE`) with `CaptionsToast.fromResult(result)` for `showCaptionsResult`.
+- `app/src/test/kotlin/ui/playback/TrailerMediaKeyTests.kt`: added 2 unit tests verifying `CaptionsToast.fromResult` mappings and confirming unavailable/null/empty results never map to `CaptionsToast.ON`.
+- **Verification:** `:app:testDebugUnitTest --tests "org.jellyfin.androidtv.ui.playback.TrailerMediaKeyTests" --offline --no-daemon` PASS (8 tests, 0 failures); full `:app:testDebugUnitTest --offline --no-daemon` PASS (14 classes, 107 tests, 0 failures). Diff and logs saved in [`../../04_Evidence/20261109-trailer-captions-toast-fix/README.md`](../../04_Evidence/20261109-trailer-captions-toast-fix/README.md).
+- **Not run:** APK build, lint, and physical Shield TV testing (`T04` no-captions and captioned trailer verification; Gary's `T06` on installed dev33 r2 remains pending).
+
+## Previous handoff — 31 October 2026: Garrison Streamer dev33 r2 installed
 
 User-authorized fresh debug install alongside the official Jellyfin app on Garrison's Google TV Streamer succeeded; code 33 and complete installed APK hash match retained dev33 r2. Artifact signature checked. No prior debug app/data existed; official app retained. Launch request returned ok, but Settings stayed foreground; visible startup, sign-in and physical playback/remote checks NOT RUN. User acknowledged completion. [Exact identity and recovery](CURRENT-RELEASE.md#dev33-r2-installed-on-garrisons-google-tv-streamer--31-october-2026). No build or application-source change. Gary's T06 remains pending. Waste: none created.
 
