@@ -1,4 +1,9 @@
-## Current handoff — 12 November 2026: dev34 installed on Gary's Shield, toast checks pending
+## Current handoff — 12 November 2026: dev34 toast checks PASS on Gary's Shield
+
+Gary reported "Toast checks pass on both trailers" on installed dev34 (code 34, `FB541EAA…D78F0001`): a trailer with no captions shows "Captions unavailable", and a captioned one shows "Captions on". The P01-JF-T02 toast defect is closed on the device. This is an owner summary; the two cases were not itemised further.
+
+**Next:** Gary runs T03 and trailer resume, and T06 (Seerr phase 2), on dev34. dev32 r2 stays the last fully tested build until then. Rollback is dev33 r2 with `install -r -d`, which is untested.
+## Previous handoff — 12 November 2026: dev34 installed on Gary's Shield, toast checks pending
 
 Gary approved the install, including ending a video paused about 17 minutes earlier. `adb install -r` succeeded at 00:34 device time.
 - **Readback:** code 34, device hash `FB541EAA…D78F0001` matches the candidate, and the signer `b8959ac9` is unchanged. The official app is retained.

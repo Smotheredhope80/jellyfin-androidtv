@@ -1,6 +1,6 @@
 ## Dev34 installed on Gary's Shield — 12 November 2026
 
-**Installed; toast checks pending.** Gary authorized this in chat ("Yes, install dev34").
+**Installed; toast checks PASS (owner summary).** Gary authorized this in chat ("Yes, install dev34"). On 12 Nov Gary reported "Toast checks pass on both trailers": on a trailer with no captions Up showed "Captions unavailable", and on a captioned trailer it showed "Captions on". The two cases were not itemised further.
 - **Preflight** on `192.168.68.69:5555` (SHIELD Android TV, Android 11): dev33 code 33 installed; the device hash `95F6520D…8D13775C` matched retained dev33 r2.
 - **Paused video:** the debug app had a video paused about 17 minutes earlier (state 2, at about 19:41), with the browse screen in front. Gary approved ending it ("Yes, install now"). Resume from the pause point was not preserved; any server-saved position was not checked.
 - **Install:** `adb install -r` succeeded; device `lastUpdateTime` 2026-11-12 00:34:37.
@@ -8,7 +8,7 @@
 - **Last tested build:** dev32 r2 stays the last tested build. T06 is still open and can be run on dev34.
 - **Unchanged:** Cindy's Shield (V9.0/dev30) and Garrison's Streamer (dev33 r2).
 - **Rollback:** the dev33 r2 APK. The downgrade needs `-d` and is untested.
-- **NOT RUN:** launch, sign-in, the no-captions and captioned trailer toasts, T03 and resume.
+- **NOT RUN:** T03 and trailer resume, and T06. dev32 r2 stays the last fully tested build.
 
 [Install log](../../apk-inspection/20261112-dev34-trailer-captions-toast/install-gary-shield.log).
 ## Dev34 trailer captions-toast candidate — 12 November 2026
