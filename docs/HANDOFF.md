@@ -1,4 +1,17 @@
-## Current handoff — 10 November 2026: P01-JF-T02 trailer captions toast fix + unit tests
+## Current handoff — 12 November 2026: dev34 trailer captions-toast candidate built, not installed
+
+Gary asked for the next candidate with the toast fix. Built at `d3153b143` (clean, the same as `fork`): `apk-inspection/20261112-dev34-trailer-captions-toast/`.
+- **APK:** SHA256 `FB541EAA…D78F0001`, 64,587,356 B, code 34, same debug signer.
+- **Checks:** 107 tests pass. Lint has 0 new findings vs dev33 r2.
+- **Command:** quote the `-P` argument when calling `Invoke-Gradle.ps1` from PowerShell. Unquoted, it is split at the dot (attempt 1 failed that way before any task ran).
+
+**Next:** with Gary's go, install dev34 over dev33 r2 on Gary's Shield. Then check:
+- the toast on a trailer with no captions, and on a captioned one;
+- T03 and trailer resume.
+
+T06 on dev33 r2 is still open. Since dev34 contains everything in dev33 r2, T06 could be run on dev34 instead. Rollback is dev33 r2 with `install -r -d`, which is untested.
+
+## Previous handoff — 10 November 2026: P01-JF-T02 trailer captions toast fix + unit tests
 
 Implemented the `P01-JF-T02` trailer no-captions toast fix on `experiment/mobile-inspired-tv-v12` (committed as `2e5f34bda`; pushed to `fork/experiment/mobile-inspired-tv-v12`):
 - `app/src/main/java/org/jellyfin/androidtv/ui/playback/EmbeddedTrailerActivity.kt`: `toggleCaptions()` now checks `player.getOption('captions', 'tracklist')` after `player.loadModule('captions')`; when no caption tracks exist, it unloads the captions module and returns `'unavailable'` instead of `'on'`. Extracted `internal enum class CaptionsToast` (`ON`, `OFF`, `UNAVAILABLE`) with `CaptionsToast.fromResult(result)` for `showCaptionsResult`.

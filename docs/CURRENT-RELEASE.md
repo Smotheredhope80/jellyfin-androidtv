@@ -1,3 +1,21 @@
+## Dev34 trailer captions-toast candidate — 12 November 2026
+
+**Latest experimental build. Built, not installed.** Gary's Shield stays on dev33 r2 (T06 pending), and dev32 r2 stays the last tested build. Garrison's Streamer stays on dev33 r2 and Cindy's Shield on V9.0/dev30.
+
+- **APK:** `apk-inspection/20261112-dev34-trailer-captions-toast/jellyfin-androidtv-v0.0.0-dev.34-debug.apk`, 64,587,356 bytes, SHA256 `FB541EAA86B45AE291CFD229609657EE78C066C53868607DE7E18669D78F0001`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.34` / code 34. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
+- **Source:** commit `d3153b143` on `experiment/mobile-inspired-tv-v12`, the same as `fork`, with a clean tree. The app changes since dev33 r2 are the P01-JF-T02 fix in `2e5f34bda`: `EmbeddedTrailerActivity.kt` and `TrailerMediaKeyTests.kt`.
+- **Scope:** on a trailer with no caption tracks, D-pad Up shows "Captions unavailable" instead of a false "Captions on". Nothing else changed.
+- **Checks:**
+  - BUILD SUCCESSFUL, offline.
+  - 107 tests pass.
+  - Lint 81/326/423, with 0 added and 3 removed vs dev33 r2. The 3 removed are offline "newer AGP available" warnings.
+  - Same 1,341 APK entries as dev33 r2. Only `classes18.dex` changed size.
+  - Tier 2; no verifier.
+- **Install:** dev34 would install in place over dev33 r2 (same signer, higher code). Rollback to dev33 r2 needs `install -r -d`, which is untested.
+- **NOT RUN:** install; the no-captions and captioned trailer toasts; T03 and resume on the Shield.
+
+[Candidate README](../../apk-inspection/20261112-dev34-trailer-captions-toast/README.md).
+
 ## Dev33 r2 installed on Garrison's Google TV Streamer — 31 October 2026
 
 User requested the latest debug APK while present with ADB enabled. BEDROOM-PC / Codex session `01a1912a-7c6f-7e40-9479-264de1487139` verified Cast name Garrison's Room TV and Google TV Streamer (kirkwood), Android API 34, against the P05 reservation record. Before: official `org.jellyfin.androidtv` present; debug package absent; no playing media session reported. Fresh debug install alongside official app; no uninstall/data clear or prior debug APK to preserve.
