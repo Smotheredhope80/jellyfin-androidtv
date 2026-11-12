@@ -1,4 +1,17 @@
-## Current handoff — 12 November 2026: dev34 trailer captions-toast candidate built, not installed
+## Current handoff — 12 November 2026: dev34 installed on Gary's Shield, toast checks pending
+
+Gary approved the install, including ending a video paused about 17 minutes earlier. `adb install -r` succeeded at 00:34 device time.
+- **Readback:** code 34, device hash `FB541EAA…D78F0001` matches the candidate, and the signer `b8959ac9` is unchanged. The official app is retained.
+- **Not affected:** Cindy's Shield and Garrison's Streamer.
+
+**Next:** Gary checks on dev34:
+- a trailer with no captions: Up shows "Captions unavailable";
+- a captioned trailer: Up still shows "Captions on";
+- T03 and trailer resume;
+- T06 (Seerr phase 2).
+
+Rollback is dev33 r2 with `install -r -d`, which is untested.
+## Previous handoff — 12 November 2026: dev34 trailer captions-toast candidate built, not installed
 
 Gary asked for the next candidate with the toast fix. Built at `d3153b143` (clean, the same as `fork`): `apk-inspection/20261112-dev34-trailer-captions-toast/`.
 - **APK:** SHA256 `FB541EAA…D78F0001`, 64,587,356 B, code 34, same debug signer.

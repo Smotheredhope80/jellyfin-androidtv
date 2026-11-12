@@ -1,6 +1,19 @@
+## Dev34 installed on Gary's Shield — 12 November 2026
+
+**Installed; toast checks pending.** Gary authorized this in chat ("Yes, install dev34").
+- **Preflight** on `192.168.68.69:5555` (SHIELD Android TV, Android 11): dev33 code 33 installed; the device hash `95F6520D…8D13775C` matched retained dev33 r2.
+- **Paused video:** the debug app had a video paused about 17 minutes earlier (state 2, at about 19:41), with the browse screen in front. Gary approved ending it ("Yes, install now"). Resume from the pause point was not preserved; any server-saved position was not checked.
+- **Install:** `adb install -r` succeeded; device `lastUpdateTime` 2026-11-12 00:34:37.
+- **Readback:** `0.0.0-dev.34`/code 34. The device base.apk SHA256 `FB541EAA…D78F0001` matches the candidate. Signatures `b8959ac9`, the same as dev33. No uninstall or data clear. The official `org.jellyfin.androidtv` is still installed.
+- **Last tested build:** dev32 r2 stays the last tested build. T06 is still open and can be run on dev34.
+- **Unchanged:** Cindy's Shield (V9.0/dev30) and Garrison's Streamer (dev33 r2).
+- **Rollback:** the dev33 r2 APK. The downgrade needs `-d` and is untested.
+- **NOT RUN:** launch, sign-in, the no-captions and captioned trailer toasts, T03 and resume.
+
+[Install log](../../apk-inspection/20261112-dev34-trailer-captions-toast/install-gary-shield.log).
 ## Dev34 trailer captions-toast candidate — 12 November 2026
 
-**Latest experimental build. Built, not installed.** Gary's Shield stays on dev33 r2 (T06 pending), and dev32 r2 stays the last tested build. Garrison's Streamer stays on dev33 r2 and Cindy's Shield on V9.0/dev30.
+**Latest experimental build; installed on Gary's Shield 12 Nov (above).** dev32 r2 stays the last tested build. Garrison's Streamer stays on dev33 r2 and Cindy's Shield on V9.0/dev30.
 
 - **APK:** `apk-inspection/20261112-dev34-trailer-captions-toast/jellyfin-androidtv-v0.0.0-dev.34-debug.apk`, 64,587,356 bytes, SHA256 `FB541EAA86B45AE291CFD229609657EE78C066C53868607DE7E18669D78F0001`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.34` / code 34. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
 - **Source:** commit `d3153b143` on `experiment/mobile-inspired-tv-v12`, the same as `fork`, with a clean tree. The app changes since dev33 r2 are the P01-JF-T02 fix in `2e5f34bda`: `EmbeddedTrailerActivity.kt` and `TrailerMediaKeyTests.kt`.
@@ -43,7 +56,7 @@ Install scope CLOSED; open the debug app from Apps and sign in as needed. Gary's
 
 ## Dev33 Seerr phase 2 candidate (revision 2) — 27 October 2026
 
-**Latest experimental build; installed on Gary's Shield (above).** Cindy's Shield stays on V9.0/dev30.
+**Superseded as the latest experimental build by dev34 (12 Nov).** It was installed on Gary's Shield from 27 Oct to 12 Nov (above) and is still on Garrison's Streamer. Cindy's Shield stays on V9.0/dev30.
 
 - **APK:** `apk-inspection/20261027-dev33-seerr-phase2-r2/jellyfin-androidtv-v0.0.0-dev.33-debug.apk`, 64,814,703 bytes, SHA256 `95F6520D39050937E27A0C14FC5240EF37183483AD0E873FFCBD6E018D13775C`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.33` / code 33. apksigner v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
 - **Source:** commit `8f67dd9bd` (feature `83a3979fb` plus review fixes) on `experiment/mobile-inspired-tv-v12`. Local only.
