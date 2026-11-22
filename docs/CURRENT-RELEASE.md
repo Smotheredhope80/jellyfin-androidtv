@@ -1,3 +1,22 @@
+## Dev35 seasonal Movies filters & ElegantFin custom-media-covers candidate — 22 November 2026
+
+**Latest experimental build; NOT INSTALLED.** Gary's Shield stays on `dev34` (`FB541EAA…`), Garrison's Streamer on `dev33 r2`, and Cindy's Shield on `V9.0/dev30` (`publication-worktree-20260927` untouched).
+
+- **APK:** `apk-inspection/20261122-dev35-seasonal-movies-elegantfin-covers/jellyfin-androidtv-v0.0.0-dev.35-debug.apk`, `65,005,065` bytes, SHA256 `C90035F8C45F323AB8640BA9CCB1A5B7558AE9321785DCE0BC8D3E3734925A4F`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.35` / code `35`. `apksigner` v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
+- **Source:** commit `3cc4bf70e` on `experiment/mobile-inspired-tv-v12` (plus docs checkpoint). App/resource/test changes (`22` files) match `source-manifest.csv`.
+- **Scope:**
+  - Movies grid category picker pills (`All Movies`, `Holiday`, `Christmas`, `Halloween`) and Movies Views row tiles filtering live server queries (`IncludeItemTypes = Movie`, `Recursive = true`, `ParentId`, `Tags = <tag>`, excluding `BoxSet`), plus generation-guarded stale coroutine cancellation (`ItemRowAdapter.java`, `ItemRowAdapterHelper.kt`) and D-pad focus retention.
+  - Official `lscambo13/ElegantFin` `custom-media-covers` WebP assets (`ef_cover_*.webp`) + `BlendMode.Multiply` tint cards on the ElegantFin Home My Media row (`LibraryArtwork.kt`, `CardPresenter.kt`) and `GridButtonPresenter.kt` pill focus polish, preserving `libraryArtwork()` hero backdrops and default theme.
+- **Checks:**
+  - Offline Gradle (`:app:testDebugUnitTest :app:lintDebug :app:assembleDebug -Pjellyfin.version=0.0.0-dev.35`): `BUILD SUCCESSFUL`.
+  - `15` suites / `113` tests pass (`0` failures/errors/skips).
+  - Lint `81/326/426` (`0` new errors/warnings vs `dev34`; `+3` `UnknownNullness` hints in `ItemRowAdapter.java`).
+  - Independent Tier 3 `garro-shield-verifier`: `ACCEPT WITH NOTES`.
+- **Install:** `dev35` installs in place over `dev34` (same signer, higher code). Rollback to `dev34` needs `install -r -d`, which is untested.
+- **NOT RUN:** `adb install -r` on Gary's Shield (`192.168.68.69:5555`); physical D-pad/focus-memory checks; live Jellyfin tag query checks; visual Home/Movies inspection.
+
+[Candidate README](../../apk-inspection/20261122-dev35-seasonal-movies-elegantfin-covers/README.md).
+
 ## Dev34 installed on Gary's Shield — 12 November 2026
 
 **Installed; toast checks PASS (owner summary).** Gary authorized this in chat ("Yes, install dev34"). On 12 Nov Gary reported "Toast checks pass on both trailers": on a trailer with no captions Up showed "Captions unavailable", and on a captioned trailer it showed "Captions on". The two cases were not itemised further.
