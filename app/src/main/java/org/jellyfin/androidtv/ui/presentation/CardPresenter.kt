@@ -22,6 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -29,10 +36,13 @@ import androidx.compose.ui.platform.findViewTreeCompositionContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.leanback.widget.Presenter
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -55,6 +65,7 @@ import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowType
 import org.jellyfin.androidtv.ui.itemhandling.GridButtonBaseRowItem
 import org.jellyfin.androidtv.util.ImageHelper
+import org.jellyfin.androidtv.ui.home.elegantFinMediaCover
 import org.jellyfin.androidtv.ui.home.homePlaybackProgress
 import org.jellyfin.androidtv.ui.home.homeEpisodeLabel
 import org.jellyfin.androidtv.ui.home.libraryArtwork
@@ -350,16 +361,74 @@ private fun CardViewHolderContent(
 	if (item == null || displayConfig == null) return
 
 	if (modernHome && item.baseItem?.type in setOf(BaseItemKind.USER_VIEW, BaseItemKind.COLLECTION_FOLDER)) {
-		// The containing Leanback view owns focus/clicks; no nested Compose focus target.
-		Row(
-			modifier = Modifier.width(156.dp).height(40.dp)
-				.background(colorResource(R.color.theme_elegantfin_surface), cardShape)
-				.then(cardFocusBorder).padding(horizontal = 12.dp),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(8.dp),
-		) {
-			Image(painterResource(R.drawable.ic_folder), contentDescription = null, modifier = Modifier.size(18.dp))
-			Text(title.orEmpty(), color = Tokens.Color.colorWhite, maxLines = 1, overflow = TextOverflow.Ellipsis)
+		val cover = if (elegantFin) item.baseItem?.elegantFinMediaCover() else null
+		if (cover != null) {
+			val borderModifier = if (focused) {
+				cardFocusBorder
+			} else {
+				Modifier.border(1.dp, Color(0x33FFFFFF), cardShape)
+			}
+			// The containing Leanback view owns focus/clicks; no nested Compose focus target.
+			Box(
+				contentAlignment = Alignment.Center,
+				modifier = Modifier
+					.size(width = 160.dp, height = 90.dp)
+					.clip(cardShape)
+					.then(borderModifier),
+			) {
+				Image(
+					painter = painterResource(cover.drawableRes),
+					contentDescription = null,
+					contentScale = ContentScale.Crop,
+					colorFilter = ColorFilter.tint(Color(cover.overlayColorHex), BlendMode.Multiply),
+					modifier = Modifier.fillMaxSize(),
+				)
+				Box(
+					modifier = Modifier
+						.fillMaxSize()
+						.background(Color.Black.copy(alpha = 0.18f))
+						.background(
+							Brush.verticalGradient(
+								colors = listOf(
+									Color.Black.copy(alpha = 0.08f),
+									Color.Black.copy(alpha = 0.22f),
+									Color.Black.copy(alpha = 0.36f),
+								)
+							)
+						)
+				)
+				Text(
+					text = item.baseItem?.name ?: title.orEmpty(),
+					style = TextStyle(
+						color = Color.White,
+						fontSize = 17.sp,
+						fontWeight = FontWeight.ExtraBold,
+						textAlign = TextAlign.Center,
+						shadow = Shadow(
+							color = Color.Black.copy(alpha = 0.75f),
+							offset = Offset(0f, 2f),
+							blurRadius = 6f,
+						),
+					),
+					maxLines = 2,
+					overflow = TextOverflow.Ellipsis,
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(horizontal = 10.dp),
+				)
+			}
+		} else {
+			// The containing Leanback view owns focus/clicks; no nested Compose focus target.
+			Row(
+				modifier = Modifier.width(156.dp).height(40.dp)
+					.background(colorResource(R.color.theme_elegantfin_surface), cardShape)
+					.then(cardFocusBorder).padding(horizontal = 12.dp),
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.spacedBy(8.dp),
+			) {
+				Image(painterResource(R.drawable.ic_folder), contentDescription = null, modifier = Modifier.size(18.dp))
+				Text(title.orEmpty(), color = Tokens.Color.colorWhite, maxLines = 1, overflow = TextOverflow.Ellipsis)
+			}
 		}
 		return
 	}

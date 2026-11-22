@@ -181,22 +181,22 @@ private fun GridButtonView(
 			// Pill button for text-only views (Suggested, All items, By letter, Genres, Albums, Artists, Random, etc.)
 			val buttonWidth = maxOf(width, 136).dp
 			val borderModifier = if (focused) {
-				Modifier.border(2.dp, colorResource(R.color.theme_elegantfin_accent), shape)
+				Modifier.border(2.dp, Color(0xFF8BD5FF), shape)
 			} else {
-				Modifier.border(1.dp, Color(0x26FFFFFF), shape)
+				Modifier.border(1.dp, Color(0x33FFFFFF), shape)
 			}
 			Box(
 				contentAlignment = Alignment.Center,
 				modifier = Modifier
 					.width(buttonWidth)
-					.height(44.dp)
+					.height(42.dp)
 					.then(borderModifier)
 					.clip(shape)
 					.background(
-						if (focused) colorResource(R.color.theme_elegantfin_accent).copy(alpha = 0.35f)
-						else colorResource(R.color.theme_elegantfin_surface).copy(alpha = 0.70f)
+						if (focused) colorResource(R.color.theme_elegantfin_accent).copy(alpha = 0.45f)
+						else colorResource(R.color.theme_elegantfin_surface).copy(alpha = 0.72f)
 					)
-					.padding(horizontal = 12.dp)
+					.padding(horizontal = 14.dp)
 			) {
 				Text(
 					text = value.text,

@@ -28,6 +28,7 @@ import org.jellyfin.androidtv.data.repository.UserViewsRepository;
 import org.jellyfin.androidtv.ui.GridButton;
 import org.jellyfin.androidtv.ui.browsing.BrowseGridFragment;
 import org.jellyfin.androidtv.ui.browsing.EnhancedBrowseFragment;
+import org.jellyfin.androidtv.ui.browsing.MovieCategoryFilter;
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter;
 import org.jellyfin.androidtv.ui.presentation.TextItemPresenter;
 import org.jellyfin.androidtv.util.Utils;
@@ -52,8 +53,10 @@ import org.koin.java.KoinJavaComponent;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
 import kotlin.Lazy;
+import kotlinx.coroutines.Job;
 import timber.log.Timber;
 
 public class ItemRowAdapter extends MutableObjectAdapter<Object> {
@@ -77,6 +80,9 @@ public class ItemRowAdapter extends MutableObjectAdapter<Object> {
     private ItemSortBy mSortBy;
     private SortOrder sortOrder;
     private FilterOptions mFilters;
+    private MovieCategoryFilter mMovieCategory = MovieCategoryFilter.ALL;
+    private Job activeRetrieveJob;
+    private long retrieveGeneration = 0L;
 
     private EmptyResponse mRetrieveFinishedListener;
 
@@ -393,11 +399,41 @@ public class ItemRowAdapter extends MutableObjectAdapter<Object> {
         return sortOrder;
     }
 
+    public synchronized long startNewRetrieveGeneration() {
+        if (activeRetrieveJob != null) {
+            activeRetrieveJob.cancel((CancellationException) null);
+            activeRetrieveJob = null;
+        }
+        return ++retrieveGeneration;
+    }
+
+    public synchronized void setActiveRetrieveJob(Job job, long generation) {
+        if (generation == retrieveGeneration) {
+            activeRetrieveJob = job;
+        } else if (job != null) {
+            job.cancel((CancellationException) null);
+        }
+    }
+
+    public synchronized boolean isCurrentRetrieveGeneration(long generation) {
+        return generation == retrieveGeneration;
+    }
+
+    public synchronized void cancelPendingRetrieve() {
+        if (activeRetrieveJob != null) {
+            activeRetrieveJob.cancel((CancellationException) null);
+            activeRetrieveJob = null;
+        }
+        retrieveGeneration++;
+        setCurrentlyRetrieving(false);
+    }
+
     public FilterOptions getFilters() {
         return mFilters;
     }
 
     public void setFilters(FilterOptions filters) {
+        cancelPendingRetrieve();
         mFilters = filters;
         switch (queryType) {
             case Artists:
@@ -410,6 +446,19 @@ public class ItemRowAdapter extends MutableObjectAdapter<Object> {
                 mQuery = ItemRowAdapterHelperKt.setItemsFilter(mQuery, filters.getFilters());
         }
         removeRow();
+    }
+
+    public MovieCategoryFilter getMovieCategory() {
+        return mMovieCategory;
+    }
+
+    public void setMovieCategory(MovieCategoryFilter category) {
+        cancelPendingRetrieve();
+        mMovieCategory = category != null ? category : MovieCategoryFilter.ALL;
+        if (mQuery != null) {
+            mQuery = ItemRowAdapterHelperKt.setItemsMovieCategory(mQuery, mMovieCategory);
+            removeRow();
+        }
     }
 
     public @Nullable String getStartLetter() {
@@ -570,6 +619,7 @@ public class ItemRowAdapter extends MutableObjectAdapter<Object> {
     }
 
     public void Retrieve() {
+        cancelPendingRetrieve();
         notifyRetrieveStarted();
         lastFullRetrieve = Instant.now();
         itemsLoaded = 0;

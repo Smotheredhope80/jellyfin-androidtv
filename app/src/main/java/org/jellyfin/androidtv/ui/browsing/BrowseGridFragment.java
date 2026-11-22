@@ -2,10 +2,16 @@ package org.jellyfin.androidtv.ui.browsing;
 
 import static org.koin.java.KoinJavaComponent.inject;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -13,8 +19,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -68,6 +76,7 @@ import org.jellyfin.sdk.model.api.SortOrder;
 
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -111,6 +120,8 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
     private boolean resetSelectionOnRetrieve;
     private boolean modernLibrary;
     private ModernLibraryBrowser modernBrowser;
+    private MovieCategoryFilter activeMovieCategory = MovieCategoryFilter.ALL;
+    private final Map<MovieCategoryFilter, TextView> categoryButtons = new LinkedHashMap<>();
     private int mGridHeight = -1;
     private int mGridWidth = -1;
     private int mGridItemSpacingHorizontal = 0;
@@ -153,6 +164,10 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         mainTitle = mFolder.getName();
         if (mFolder != null) {
             backgroundService.getValue().setBackground(mFolder);
+        }
+        if (mFolder.getCollectionType() == CollectionType.MOVIES) {
+            String initialTag = getArguments() != null ? getArguments().getString(Extras.InitialTag, null) : null;
+            activeMovieCategory = MovieCategoryFilter.fromTag(initialTag);
         }
         modernLibrary = ModernLibraryBrowser.isEnabled(mFolder);
         if (modernLibrary) mGridHeight = Math.round(display.heightPixels / display.density - 286f);
@@ -340,11 +355,24 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
     public void setStatusText(String folderName) {
         String text = getString(R.string.lbl_showing) + " ";
         FilterOptions filters = mAdapter.getFilters();
-        if (filters == null || (!filters.isFavoriteOnly() && !filters.isUnwatchedOnly())) {
+        boolean hasFilters = filters != null && (filters.isFavoriteOnly() || filters.isUnwatchedOnly());
+        boolean hasCategory = mFolder.getCollectionType() == CollectionType.MOVIES && activeMovieCategory != MovieCategoryFilter.ALL;
+        if (!hasFilters && !hasCategory) {
             text += getString(R.string.lbl_all_items);
         } else {
-            text += (filters.isUnwatchedOnly() ? getString(R.string.lbl_unwatched) : "") + " " +
-                    (filters.isFavoriteOnly() ? getString(R.string.lbl_favorites) : "");
+            StringBuilder filterText = new StringBuilder();
+            if (hasCategory) {
+                filterText.append(getString(activeMovieCategory.getLabelRes()));
+            }
+            if (filters != null && filters.isUnwatchedOnly()) {
+                if (filterText.length() > 0) filterText.append(" ");
+                filterText.append(getString(R.string.lbl_unwatched));
+            }
+            if (filters != null && filters.isFavoriteOnly()) {
+                if (filterText.length() > 0) filterText.append(" ");
+                filterText.append(getString(R.string.lbl_favorites));
+            }
+            text += filterText.toString();
         }
 
         if (mAdapter.getStartLetter() != null) {
@@ -742,10 +770,13 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
                     }, 500);
                 } else if (mGridView != null) {
                     mGridView.setFocusable(true);
-                    if (!modernLibrary || !binding.toolBar.hasFocus()) mGridView.requestFocus();
+                    if (!binding.toolBar.hasFocus()) mGridView.requestFocus();
                 }
             }
         });
+        if (mFolder.getCollectionType() == CollectionType.MOVIES && mRowDef.getQueryType() == QueryType.Items) {
+            mAdapter.setMovieCategory(activeMovieCategory);
+        }
         mAdapter.setFilters(filters);
 
         updateAdapter();
@@ -777,6 +808,94 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
     }
 
     private void addTools() {
+        categoryButtons.clear();
+        if (mFolder.getCollectionType() == CollectionType.MOVIES && mRowDef.getQueryType() == QueryType.Items) {
+            if (!modernLibrary) {
+                ViewGroup.LayoutParams toolBarParams = binding.toolBar.getLayoutParams();
+                if (toolBarParams != null) {
+                    toolBarParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    binding.toolBar.setLayoutParams(toolBarParams);
+                }
+            }
+            int pillHPad = Utils.convertDpToPixel(requireContext(), 10);
+            int pillVPad = Utils.convertDpToPixel(requireContext(), 5);
+            int pillMarginEnd = Utils.convertDpToPixel(requireContext(), 6);
+            int pillRadius = Utils.convertDpToPixel(requireContext(), 6);
+            int pillStroke = Utils.convertDpToPixel(requireContext(), 1);
+            for (final MovieCategoryFilter category : MovieCategoryFilter.values()) {
+                TextView pill = new TextView(requireContext());
+                pill.setText(category.getLabelRes());
+                pill.setSingleLine(true);
+                pill.setGravity(Gravity.CENTER);
+                pill.setFocusable(true);
+                pill.setFocusableInTouchMode(true);
+                pill.setClickable(true);
+                pill.setActivated(category == activeMovieCategory);
+                if (!modernLibrary) {
+                    pill.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+                    pill.setTypeface(null, Typeface.BOLD);
+                    pill.setPadding(pillHPad, pillVPad, pillHPad, pillVPad);
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                    );
+                    lp.setMarginEnd(pillMarginEnd);
+                    pill.setLayoutParams(lp);
+
+                    GradientDrawable focusedDrawable = new GradientDrawable();
+                    focusedDrawable.setColor(Color.WHITE);
+                    focusedDrawable.setCornerRadius(pillRadius);
+
+                    GradientDrawable activatedDrawable = new GradientDrawable();
+                    activatedDrawable.setColor(Color.argb(140, 99, 102, 241));
+                    activatedDrawable.setCornerRadius(pillRadius);
+                    activatedDrawable.setStroke(pillStroke, Color.argb(200, 199, 210, 254));
+
+                    GradientDrawable defaultDrawable = new GradientDrawable();
+                    defaultDrawable.setColor(Color.argb(55, 255, 255, 255));
+                    defaultDrawable.setCornerRadius(pillRadius);
+
+                    StateListDrawable bg = new StateListDrawable();
+                    bg.addState(new int[]{android.R.attr.state_focused}, focusedDrawable);
+                    bg.addState(new int[]{android.R.attr.state_activated}, activatedDrawable);
+                    bg.addState(new int[]{}, defaultDrawable);
+                    pill.setBackground(bg);
+
+                    pill.setTextColor(new ColorStateList(
+                            new int[][]{
+                                    new int[]{android.R.attr.state_focused},
+                                    new int[]{android.R.attr.state_activated},
+                                    new int[]{}
+                            },
+                            new int[]{
+                                    Color.rgb(15, 23, 42),
+                                    Color.WHITE,
+                                    Color.rgb(226, 232, 240)
+                            }
+                    ));
+                }
+                pill.setOnClickListener(v -> {
+                    if (activeMovieCategory == category) return;
+                    activeMovieCategory = category;
+                    for (Map.Entry<MovieCategoryFilter, TextView> entry : categoryButtons.entrySet()) {
+                        entry.getValue().setActivated(entry.getKey() == activeMovieCategory);
+                    }
+                    resetModernSelection();
+                    if (!modernLibrary) {
+                        resetSelectionOnRetrieve = true;
+                        mSelectedPosition = 0;
+                        mCurrentItem = null;
+                    }
+                    mAdapter.setMovieCategory(activeMovieCategory);
+                    mAdapter.setStartLetter(null);
+                    mAdapter.Retrieve();
+                    setStatusText(mFolder.getName());
+                });
+                categoryButtons.put(category, pill);
+                binding.toolBar.addView(pill);
+            }
+        }
+
         //Add tools
         int size = Utils.convertDpToPixel(requireContext(), 26);
 

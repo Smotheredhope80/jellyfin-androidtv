@@ -210,6 +210,10 @@
     <string name="desc_debug">Provide extra information for debugging</string>
     <string name="lbl_showing">Showing</string>
     <string name="lbl_all_items">All items</string>
+    <string name="lbl_all_movies">All Movies</string>
+    <string name="lbl_holiday">Holiday</string>
+    <string name="lbl_christmas">Christmas</string>
+    <string name="lbl_halloween">Halloween</string>
     <string name="lbl_sorted_by">sorted by</string>
     <string name="lbl_from">from</string>
     <string name="lbl_name">Name</string>

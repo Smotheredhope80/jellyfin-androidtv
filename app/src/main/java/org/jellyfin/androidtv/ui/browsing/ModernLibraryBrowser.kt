@@ -2,8 +2,11 @@ package org.jellyfin.androidtv.ui.browsing
 
 import android.content.res.ColorStateList
 import android.graphics.Color as AndroidColor
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -79,6 +82,8 @@ class ModernLibraryBrowser private constructor(root: RelativeLayout, private val
 			binding.infoRow.visibility = View.GONE
 			binding.toolBar.apply {
 				alpha = 1f
+				gravity = Gravity.CENTER_VERTICAL
+				showDividers = LinearLayout.SHOW_DIVIDER_NONE
 				layoutParams = RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 48.dp(context)).apply {
 					addRule(RelativeLayout.BELOW, browser.header.id)
 					marginStart = 48.dp(context); marginEnd = 48.dp(context)
@@ -113,19 +118,65 @@ class ModernLibraryBrowser private constructor(root: RelativeLayout, private val
 		}
 
 		@JvmStatic fun styleTools(toolbar: LinearLayout) {
-			val buttons = (0 until toolbar.childCount).map { toolbar.getChildAt(it) }.filterIsInstance<ImageButton>()
+			val children = (0 until toolbar.childCount).map { toolbar.getChildAt(it) }
+			val pills = children.filterIsInstance<TextView>().filter { it !is ImageButton }
+			val buttons = children.filterIsInstance<ImageButton>()
 			val caption = TextView(toolbar.context).apply {
-				text = buttons.firstOrNull()?.contentDescription
+				isFocusable = false
+				isClickable = false
+				text = if (pills.isEmpty()) buttons.firstOrNull()?.contentDescription else ""
 				setTextColor(AndroidColor.WHITE); textSize = 15f
 				maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
-				gravity = android.view.Gravity.CENTER_VERTICAL
+				gravity = if (pills.isEmpty()) Gravity.CENTER_VERTICAL else Gravity.END or Gravity.CENTER_VERTICAL
 			}
-			toolbar.addView(caption, 0, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
-			for (button in buttons) {
-				fun surface(fill: Int, stroke: Int) = GradientDrawable().apply {
-					setColor(fill); cornerRadius = 10.dp(toolbar.context).toFloat()
-					setStroke(2.dp(toolbar.context), stroke)
+			val captionParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply {
+				if (pills.isNotEmpty()) {
+					marginStart = 12.dp(toolbar.context)
+					marginEnd = 6.dp(toolbar.context)
 				}
+			}
+			toolbar.addView(caption, pills.size, captionParams)
+
+			fun surface(fill: Int, stroke: Int, strokeWidthPx: Int = 2.dp(toolbar.context)) = GradientDrawable().apply {
+				setColor(fill); cornerRadius = 10.dp(toolbar.context).toFloat()
+				setStroke(strokeWidthPx, stroke)
+			}
+
+			val defaultStrokePx = (1.5f * toolbar.resources.displayMetrics.density).toInt().coerceAtLeast(1)
+			val pillTextColors = ColorStateList(
+				arrayOf(
+					intArrayOf(android.R.attr.state_focused),
+					intArrayOf(android.R.attr.state_activated),
+					intArrayOf(),
+				),
+				intArrayOf(
+					AndroidColor.rgb(15, 23, 42),
+					AndroidColor.WHITE,
+					AndroidColor.rgb(226, 232, 240),
+				),
+			)
+			for (pill in pills) {
+				pill.background = StateListDrawable().apply {
+					addState(intArrayOf(android.R.attr.state_focused), surface(AndroidColor.WHITE, AndroidColor.rgb(139, 213, 255)))
+					addState(intArrayOf(android.R.attr.state_activated), surface(AndroidColor.rgb(78, 52, 130), AndroidColor.rgb(167, 139, 250)))
+					addState(intArrayOf(), surface(AndroidColor.rgb(30, 41, 59), AndroidColor.rgb(67, 82, 108), defaultStrokePx))
+				}
+				pill.setTextColor(pillTextColors)
+				pill.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f)
+				pill.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+				pill.gravity = Gravity.CENTER
+				pill.setPadding(12.dp(toolbar.context), 0, 12.dp(toolbar.context), 0)
+				pill.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 40.dp(toolbar.context)).apply {
+					marginEnd = 8.dp(toolbar.context)
+				}
+				val previous = pill.onFocusChangeListener
+				pill.setOnFocusChangeListener { view, focused ->
+					previous?.onFocusChange(view, focused)
+					if (focused) caption.text = ""
+				}
+			}
+
+			for (button in buttons) {
 				button.background = StateListDrawable().apply {
 					addState(intArrayOf(android.R.attr.state_focused), surface(AndroidColor.WHITE, AndroidColor.rgb(139, 213, 255)))
 					addState(intArrayOf(android.R.attr.state_activated), surface(AndroidColor.rgb(78, 52, 130), AndroidColor.rgb(167, 139, 250)))

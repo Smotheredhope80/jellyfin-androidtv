@@ -51,10 +51,12 @@ object Destinations {
 
 	// Browsing
 	// TODO only pass item id instead of complete JSON to browsing destinations
-	fun libraryBrowser(item: BaseItemDto, includeType: String? = null) =
+	@JvmOverloads
+	fun libraryBrowser(item: BaseItemDto, includeType: String? = null, initialTag: String? = null) =
 		fragmentDestination<BrowseGridFragment>(
 			Extras.Folder to Json.encodeToString(item),
 			Extras.IncludeType to includeType,
+			Extras.InitialTag to initialTag,
 		)
 
 	// TODO only pass item id instead of complete JSON to browsing destinations

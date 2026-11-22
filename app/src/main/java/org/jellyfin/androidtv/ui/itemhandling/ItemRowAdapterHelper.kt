@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -15,6 +16,7 @@ import org.jellyfin.androidtv.data.querying.GetTrailersRequest
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.androidtv.ui.GridButton
 import org.jellyfin.androidtv.ui.browsing.BrowseGridFragment.SortOption
+import org.jellyfin.androidtv.ui.browsing.MovieCategoryFilter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.extensions.artistsApi
@@ -564,7 +566,8 @@ fun ItemRowAdapter.retrieveItems(
 	startIndex: Int,
 	batchSize: Int
 ) {
-	ProcessLifecycleOwner.get().lifecycleScope.launch {
+	val gen = startNewRetrieveGeneration()
+	val job = ProcessLifecycleOwner.get().lifecycleScope.launch {
 		runCatching {
 			val response = withContext(Dispatchers.IO) {
 				api.itemsApi.getItems(
@@ -574,6 +577,8 @@ fun ItemRowAdapter.retrieveItems(
 					)
 				).content
 			}
+
+			if (!isCurrentRetrieveGeneration(gen)) return@launch
 
 			totalItems = response.totalRecordCount
 			setItems(
@@ -589,10 +594,16 @@ fun ItemRowAdapter.retrieveItems(
 
 			if (itemsLoaded == 0) removeRow()
 		}.fold(
-			onSuccess = { notifyRetrieveFinished() },
-			onFailure = { error -> notifyRetrieveFinished(error as? Exception) }
+			onSuccess = {
+				if (isCurrentRetrieveGeneration(gen)) notifyRetrieveFinished()
+			},
+			onFailure = { error ->
+				if (error is CancellationException) throw error
+				if (isCurrentRetrieveGeneration(gen)) notifyRetrieveFinished(error as? Exception)
+			}
 		)
 	}
+	setActiveRetrieveJob(job, gen)
 }
 
 fun ItemRowAdapter.retrievePremieres(
@@ -670,6 +681,11 @@ fun setItemsFilter(
 ) = request.copy(
 	filters = filters,
 )
+
+fun setItemsMovieCategory(
+	request: GetItemsRequest,
+	category: MovieCategoryFilter,
+) = MovieCategoryFilter.applyMovieCategoryFilter(request, category)
 
 fun setAlbumArtistsStartLetter(
 	request: GetAlbumArtistsRequest,

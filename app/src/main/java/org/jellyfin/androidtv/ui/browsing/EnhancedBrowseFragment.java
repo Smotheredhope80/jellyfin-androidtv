@@ -83,6 +83,9 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
     protected static final int SCHEDULE = 10;
     protected static final int SERIES = 11;
     protected static final int ALBUM_ARTISTS = 12;
+    protected static final int HOLIDAY = 13;
+    protected static final int CHRISTMAS = 14;
+    protected static final int HALLOWEEN = 15;
     protected BaseItemDto mFolder;
     protected BaseItemKind itemType;
     protected boolean showViews = true;
@@ -300,6 +303,9 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
             case MOVIE:
                 gridRowAdapter.add(new GridButton(SUGGESTED, getString(R.string.lbl_suggested)));
                 addStandardViewButtons(gridRowAdapter);
+                gridRowAdapter.add(new GridButton(HOLIDAY, getString(R.string.lbl_holiday)));
+                gridRowAdapter.add(new GridButton(CHRISTMAS, getString(R.string.lbl_christmas)));
+                gridRowAdapter.add(new GridButton(HALLOWEEN, getString(R.string.lbl_halloween)));
                 gridRowAdapter.add(new GridButton(RANDOM, getString(R.string.random)));
                 break;
 
@@ -365,6 +371,18 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
                 switch (((GridButton) item).getId()) {
                     case GRID:
                         navigationRepository.getValue().navigate(Destinations.INSTANCE.libraryBrowser(mFolder, null));
+                        break;
+
+                    case HOLIDAY:
+                        navigationRepository.getValue().navigate(Destinations.INSTANCE.libraryBrowser(mFolder, null, "holiday"));
+                        break;
+
+                    case CHRISTMAS:
+                        navigationRepository.getValue().navigate(Destinations.INSTANCE.libraryBrowser(mFolder, null, "christmas"));
+                        break;
+
+                    case HALLOWEEN:
+                        navigationRepository.getValue().navigate(Destinations.INSTANCE.libraryBrowser(mFolder, null, "halloween"));
                         break;
 
                     case ALBUMS:
