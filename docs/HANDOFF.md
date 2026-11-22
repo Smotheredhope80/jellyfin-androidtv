@@ -1,11 +1,11 @@
-## Current handoff — 22 November 2026: dev35 installed on Gary's Shield; Cindy's Shield unreachable
+## Current handoff — 22 November 2026: dev35 installed on Gary's and Cindy's Shields
 
-Gary approved installing `dev35` on both Shields ("Yes install on mine and Cindy's shield").
-- **Gary's Shield (`192.168.68.69:5555`):** Preflight confirmed `SHIELD Android TV` (Android 11), `DreamActivity` foreground, installed `dev34` (`FB541EAA…`), and Jellyfin media session `state=0` (idle). `adb install -r` -> `Success` at `2026-11-22 22:52:18`. Readback: `0.0.0-dev.35` / code `35`, device `base.apk` SHA-256 `c90035f8c45f323ab8640ba9ccb1a5b7558ae9321785dce0bc8d3e3734925a4f` (exact match), signer `[b8959ac9]` unchanged, official `org.jellyfin.androidtv` retained.
-- **Cindy's Shield (held/unreachable):** `192.168.68.85:5555` timed out (`10060`, likely unpowered on her room's step-down transformer); `.68:5555` refused (`10061`); `.76:5555` is a P03 Echo Show 5 (`Echo_Show_5_2nd_Gen__KS_`) and was left untouched. Cindy's Shield stays on `V9.0/dev30`; Garrison's Streamer stays on `dev33 r2`.
-- **Not run:** physical Shield TV D-pad/focus-memory checks, live Jellyfin `Holiday`/`Christmas`/`Halloween` tag filtering, visual `custom-media-covers` check, and Cindy's Shield `dev35` install.
+Gary approved installing `dev35` on both Shields ("Yes install on mine and Cindy's shield" / "Install in background").
+- **Gary's Shield (`192.168.68.69:5555`, `foster`, Android 11):** Preflight confirmed `DreamActivity` foreground, `dev34` (`FB541EAA…`), and Jellyfin media session `state=0`. `adb install -r` -> `Success` (`2026-11-22 22:52:18`). Readback: `0.0.0-dev.35` / code `35`, device `base.apk` SHA-256 `c90035f8c45f323ab8640ba9ccb1a5b7558ae9321785dce0bc8d3e3734925a4f` (exact match), signer `[b8959ac9]` unchanged, official `org.jellyfin.androidtv` retained.
+- **Cindy's Shield (`192.168.68.55:5555`, `mdarcy`, Android 11):** Located at `.55` post-reboot (`.85` timed out, `.68` refused, `.76` is Echo Show 5). Preflight confirmed `V9.0/dev30` (`be21c971…`) and Netflix playing (`state=3`). Silent background `adb install -r` -> `Success` (`2026-11-22 23:02:14`, no app launch). Readback: `0.0.0-dev.35` / code `35`, device `base.apk` SHA-256 `c90035f8c45f323ab8640ba9ccb1a5b7558ae9321785dce0bc8d3e3734925a4f` (exact match), signer `[b8959ac9]` unchanged, official `org.jellyfin.androidtv` retained, Netflix uninterrupted (`state=3`). Garrison's Streamer stays on `dev33 r2`.
+- **Not run:** physical Shield TV D-pad/focus-memory checks, live Jellyfin `Holiday`/`Christmas`/`Halloween` tag filtering, and visual `custom-media-covers` check on either Shield.
 
-**Next:** Gary checks `All Movies` / `Holiday` / `Christmas` / `Halloween` filtering, D-pad traversal, and Home `custom-media-covers` on his Shield, and lets us know when Cindy's Shield is powered on (or its current IP) to install `dev35` there. Rollback on Gary's Shield is `dev34` (`FB541EAA…`) with `install -r -d` (untested).
+**Next:** Gary/Cindy check `All Movies` / `Holiday` / `Christmas` / `Halloween` filtering, D-pad traversal, and Home `custom-media-covers` on both Shields. Rollback is `dev34` (`FB541EAA…`) for Gary's Shield and `V9.0/dev30` (`BE21C971…`) for Cindy's Shield with `install -r -d` (untested).
 
 ## Previous handoff — 22 November 2026: dev35 seasonal Movies filters & ElegantFin custom-media-covers built, NOT INSTALLED
 

@@ -1,17 +1,15 @@
-## Dev35 installed on Gary's Shield — 22 November 2026
+## Dev35 installed on Gary's and Cindy's Shields — 22 November 2026
 
-**Installed on Gary's Shield; physical checks pending.** Gary authorized installing on both Shields ("Yes install on mine and Cindy's shield").
-- **Preflight (`192.168.68.69:5555`, SHIELD Android TV, Android 11):** `DreamActivity` foreground, `dev34` (`FB541EAA…`) installed, Jellyfin media session `state=0` (idle).
-- **Install & Readback:** `adb -s 192.168.68.69:5555 install -r` -> `Success` (`2026-11-22 22:52:18`). Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.35` / code `35`, device `base.apk` SHA-256 `c90035f8c45f323ab8640ba9ccb1a5b7558ae9321785dce0bc8d3e3734925a4f` (matches candidate), signer `[b8959ac9]` unchanged, official `org.jellyfin.androidtv` retained.
-- **Cindy's Shield (NOT updated):** `192.168.68.85:5555` timed out (`10060`), `.68:5555` refused (`10061`), and `.76:5555` is a P03 Echo Show 5 (`Echo_Show_5_2nd_Gen__KS_`), untouched. Cindy's Shield stays on `V9.0/dev30`; Garrison's Streamer stays on `dev33 r2`.
-- **Rollback:** `dev34` (`FB541EAA…`) with `install -r -d` (untested). `dev32 r2` remains the last fully tested build.
-- **NOT RUN:** physical D-pad/focus-memory checks, live Jellyfin tag filtering, visual `custom-media-covers` check, and Cindy's Shield install.
-
-[Install log](../../apk-inspection/20261122-dev35-seasonal-movies-elegantfin-covers/install-gary-shield.log).
+**Installed on both Shields; physical checks pending.** Gary authorized installing on both Shields ("Yes install on mine and Cindy's shield" / "Install in background").
+- **Gary's Shield (`192.168.68.69:5555`, `foster`, Android 11):** Preflight `DreamActivity` foreground, `dev34` (`FB541EAA…`), Jellyfin `state=0`. `adb -s 192.168.68.69:5555 install -r` -> `Success` (`2026-11-22 22:52:18`). Readback: `0.0.0-dev.35` / code `35`, `base.apk` SHA-256 `c90035f8c45f323ab8640ba9ccb1a5b7558ae9321785dce0bc8d3e3734925a4f` (matches candidate), signer `[b8959ac9]`, official `org.jellyfin.androidtv` retained ([install-gary-shield.log](../../apk-inspection/20261122-dev35-seasonal-movies-elegantfin-covers/install-gary-shield.log)).
+- **Cindy's Shield (`192.168.68.55:5555`, `mdarcy`, Android 11):** Found at `.55` post-reboot; preflight `V9.0/dev30` (`be21c971…`), Netflix playing (`state=3`). Silent background `adb -s 192.168.68.55:5555 install -r` -> `Success` (`2026-11-22 23:02:14`, no app launch). Readback: `0.0.0-dev.35` / code `35`, `base.apk` SHA-256 `c90035f8c45f323ab8640ba9ccb1a5b7558ae9321785dce0bc8d3e3734925a4f` (matches candidate), signer `[b8959ac9]`, official `org.jellyfin.androidtv` retained, Netflix uninterrupted (`state=3`, [install-cindy-shield.log](../../apk-inspection/20261122-dev35-seasonal-movies-elegantfin-covers/install-cindy-shield.log)).
+- **Unchanged:** Garrison's Streamer (`dev33 r2`), `.76` Echo Show 5, `publication-worktree-20260927`.
+- **Rollback:** `dev34` (`FB541EAA…`) for Gary's Shield and `V9.0/dev30` (`BE21C971…`) for Cindy's Shield with `install -r -d` (untested). `dev32 r2` remains the last fully tested build.
+- **NOT RUN:** physical D-pad/focus-memory checks, live Jellyfin tag filtering, and visual `custom-media-covers` check on either Shield.
 
 ## Dev35 seasonal Movies filters & ElegantFin custom-media-covers candidate — 22 November 2026
 
-**Latest experimental build; installed on Gary's Shield 22 Nov (above).** Cindy's Shield stays on `V9.0/dev30` and Garrison's Streamer on `dev33 r2` (`publication-worktree-20260927` untouched).
+**Latest experimental build; installed on both Shields 22 Nov (above).** Garrison's Streamer stays on `dev33 r2` (`publication-worktree-20260927` untouched).
 
 - **APK:** `apk-inspection/20261122-dev35-seasonal-movies-elegantfin-covers/jellyfin-androidtv-v0.0.0-dev.35-debug.apk`, `65,005,065` bytes, SHA256 `C90035F8C45F323AB8640BA9CCB1A5B7558AE9321785DCE0BC8D3E3734925A4F`. Package `org.jellyfin.androidtv.debug` / `0.0.0-dev.35` / code `35`. `apksigner` v1/v2 pass, established debug certificate `d2e58d83…7aeb13`.
 - **Source:** commit `3cc4bf70e` on `experiment/mobile-inspired-tv-v12` (plus docs checkpoint). App/resource/test changes (`22` files) match `source-manifest.csv`.
